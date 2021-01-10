@@ -1,16 +1,17 @@
 # Fast Correlation Function Calculator (FCFC)
 
+<img src="doc/logo/FCFC_logo.svg" align="right" />
+
 ![GitHub](https://img.shields.io/github/license/cheng-zhao/FCFC.svg)
+![Codacy grade](https://img.shields.io/codacy/grade/4a85732bb6264027aefac7f002550cdd.svg)
 
 ## Table of Contents
-<img src="doc/logo/FCFC_logo.svg" align="right" />
 
 -   [Introduction](#introduction)
 -   [Compilation](#compilation)
 -   [Components and configurations](#components-and-configurations)
 -   [Acknowledgements](#acknowledgements)
 -   [References](#references)
-
 
 ## Introduction
 
@@ -82,4 +83,3 @@ TBE
 -   3-point correlation functions
 -   Approximate correlation function calculators
 -   More data structures for potentially faster correlation function evaluation
-
