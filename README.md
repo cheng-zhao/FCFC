@@ -24,7 +24,7 @@ So far the following products are supported:
 -   2PCF multipoles: *&xi;*<sub>*&ell;*</sub>(*s*);
 -   Projected 2PCF: *w*<sub>*p*</sub>(*s*<sub>perp</sub>).
 
-This program is compliant with the ISO C99 and IEEE POSIX.1-2008 standards, and no external library is mandatory. Parallelisation can be enabled with [OpenMP](https://www.openmp.org). Thus it is compatible with most of the modern C compilers and operating systems. It is written by Cheng Zhao (&#36213;&#25104;), and is distributed under the [MIT license](LICENSE_MIT.txt).
+This program is compliant with the ISO C99 and IEEE POSIX.1-2008 standards, and no external library is mandatory. Parallelisation can be enabled with [OpenMP](https://www.openmp.org). Thus it is compatible with most of the modern C compilers and operating systems. It is written by Cheng Zhao (&#36213;&#25104;), and is distributed under the [MIT license](LICENSE.txt).
 
 If you use this program in research that results in publications, please cite the following paper:
 
