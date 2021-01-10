@@ -30,7 +30,7 @@ If you use this program in research that results in publications, please cite th
 
 > Zhao et al., in preparation.
 
-<small>[\[TOC\]](#table-of-contents)</small>
+<sub>[\[TOC\]](#table-of-contents)</sub>
 
 ## Compilation
 
@@ -46,7 +46,7 @@ To compile only a certain component of the program, the name of the component ca
 make [COMPONENT_NAME]
 ```
 
-<small>[\[TOC\]](#table-of-contents)</small>
+<sub>[\[TOC\]](#table-of-contents)</sub>
 
 ## Components and configurations
 
@@ -63,7 +63,7 @@ An introduction of the components and the corresponding configuration parameters
 
 <span id="tab1">*: treat the 3<sup>rd</sup> dimension (*z*-direction) as the line of sight</span>
 
-<small>[\[TOC\]](#table-of-contents)</small>
+<sub>[\[TOC\]](#table-of-contents)</sub>
 
 ## Acknowledgements
 
