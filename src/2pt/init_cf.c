@@ -141,7 +141,7 @@ CF *cf_init(const CONF *conf) {
   cf->coord = NULL;
   cf->pc_idx[0] = cf->pc_idx[1] = NULL;
   cf->cnt = NULL;
-  cf->norm = NULL;
+  cf->wdata = cf->norm = NULL;
   cf->pcnt = NULL;
   cf->ncnt = cf->cf = cf->mp = cf->wp = NULL;
   cf->cf_exp = NULL;
@@ -421,6 +421,15 @@ CF *cf_init(const CONF *conf) {
     P_ERR("failed to allocate memory for the number of input objects\n");
     cf_destroy(cf); return NULL;
   }
+  for (int i = 0; i < cf->ncat; i++) {
+    if (cf->wt[i]) {
+      if (!(cf->wdata = calloc(cf->ncat, sizeof(double)))) {
+        P_ERR("failed to allocate memory for the weighted number of inputs\n");
+        cf_destroy(cf); return NULL;
+      }
+      break;
+    }
+  }
 
   if (!(cf->cnt = malloc(sizeof(pair_count_t *) * cf->npc))) {
     P_ERR("failed to allocate memory for pair counts\n");
@@ -546,6 +555,7 @@ void cf_destroy(CF *cf) {
     free(cf->data);
   }
   if (cf->ndata) free(cf->ndata);
+  if (cf->wdata) free(cf->wdata);
   if (cf->coord) cnvt_destroy(cf->coord);
   if (cf->pc_idx[0]) free(cf->pc_idx[0]);
   if (cf->pc_idx[1]) free(cf->pc_idx[1]);

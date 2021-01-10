@@ -64,14 +64,31 @@ void *tree_create(const CONF *conf, CF *cf, const int idx, const int type) {
     if (cnvt_coord(conf, cf->data[idx], cf->ndata[idx], cf->coord)) return NULL;
   }
 
-  /* Precompute the squared distance between tracers and the origin. */
+  /* Precompute the squared distance between tracers and the origin,
+     and compute the total weights if necessary. */
+  if (cf->wt[idx]) {
+    double sum = 0;
+#ifdef OMP
+#pragma omp parallel for reduction(+:sum)
+#endif
+    for (size_t i = 0; i < cf->ndata[idx]; i++) {
+      cf->data[idx][i].s = cf->data[idx][i].x[0] * cf->data[idx][i].x[0] +
+          cf->data[idx][i].x[1] * cf->data[idx][i].x[1] +
+          cf->data[idx][i].x[2] * cf->data[idx][i].x[2];
+      sum += cf->data[idx][i].w;
+    }
+    cf->wdata[idx] = sum;
+  }
+  else {
 #ifdef OMP
 #pragma omp parallel for
 #endif
-  for (size_t i = 0; i < cf->ndata[idx]; i++) {
-    cf->data[idx][i].s = cf->data[idx][i].x[0] * cf->data[idx][i].x[0] +
-        cf->data[idx][i].x[1] * cf->data[idx][i].x[1] +
-        cf->data[idx][i].x[2] * cf->data[idx][i].x[2];
+    for (size_t i = 0; i < cf->ndata[idx]; i++) {
+      cf->data[idx][i].s = cf->data[idx][i].x[0] * cf->data[idx][i].x[0] +
+          cf->data[idx][i].x[1] * cf->data[idx][i].x[1] +
+          cf->data[idx][i].x[2] * cf->data[idx][i].x[2];
+    }
+    cf->wdata[idx] = (double) cf->ndata[idx];
   }
 
   /* Construct the tree. */

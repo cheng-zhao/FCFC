@@ -100,15 +100,17 @@ static int eval_pairs(const CONF *conf, CF *cf) {
       /* Double auto pairs. */
       if (usewt) {
         for (size_t k = 0; k < cf->ntot; k++) cf->cnt[i][k].d *= 2;
+        cf->norm[i] = cf->wdata[cat[0]] * (cf->wdata[cat[0]] - 1);
       }
       else {
         for (size_t k = 0; k < cf->ntot; k++) cf->cnt[i][k].i *= 2;
+        cf->norm[i] = (double) cf->ndata[cat[0]] * (cf->ndata[cat[0]] - 1);
       }
-      cf->norm[i] = (double) cf->ndata[cat[0]] * (cf->ndata[cat[0]] - 1);
     }
     else {                              /* cross counts */
       count_pairs(tree[cat[0]], tree[cat[1]], cf, cf->cnt[i], false, usewt);
-      cf->norm[i] = (double) cf->ndata[cat[0]] * cf->ndata[cat[1]];
+      if (usewt) cf->norm[i] = cf->wdata[cat[0]] * cf->wdata[cat[1]];
+      else cf->norm[i] = (double) cf->ndata[cat[0]] * cf->ndata[cat[1]];
     }
     /* Normalise pair counts. */
     if (usewt) {

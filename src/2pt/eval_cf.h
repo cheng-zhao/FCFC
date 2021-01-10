@@ -81,6 +81,7 @@ typedef struct {
   const char *label;    /* labels of the input catalogues                 */
   DATA **data;          /* structures for saving the input catalogues     */
   size_t *ndata;        /* number of objects in the input catalogues      */
+  double *wdata;        /* weighted number of objects in the inputs       */
   const bool *wt;       /* indicate whether weights are available         */
   const bool *cnvt;     /* indicate whether to run coordinate conversion  */
   COORD_CNVT *coord;    /* structure for coordinate interpolation         */

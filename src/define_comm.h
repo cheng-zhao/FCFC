@@ -100,7 +100,7 @@
                             Other runtime constants
 \*============================================================================*/
 #define FCFC_MAX_ELL            6       /* maximum ell for multipoles        */
-#define FCFC_MAX_BIN_NUM        1024    /* maximum number of bins            */
+#define FCFC_MAX_BIN_NUM        4096    /* maximum number of bins            */
 #define FCFC_SYM_ANA_RR         '@'     /* character for analytical RR count */
 
 #define FCFC_STACK_INIT_SIZE    128       /* initial stack size              */

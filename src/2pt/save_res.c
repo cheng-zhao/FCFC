@@ -85,14 +85,31 @@ int save_res(const CONF *conf, const CF *cf, const int idx,
   /* Write the header for pair counts. */
   if (flag == FCFC_OUTPUT_PAIR_COUNT) {
     WRITE_LINE("%c Created by " FCFC_CODE_NAME "\n", FCFC_SAVE_COMMENT);
+    bool usewt = cf->wt[cf->pc_idx[0][idx]] || cf->wt[cf->pc_idx[1][idx]];
     if (cf->pc_idx[0][idx] == cf->pc_idx[1][idx]) {     /* auto pairs */
-      WRITE_LINE("%c Number of tracers: %zu (auto pair counts)\n",
-          FCFC_SAVE_COMMENT, cf->ndata[cf->pc_idx[0][idx]]);
+      if (usewt) {
+        WRITE_LINE("%c Number of tracers: %zu (auto pair counts, "
+            "weighted number: " OFMT_DBL ")\n", FCFC_SAVE_COMMENT,
+            cf->ndata[cf->pc_idx[0][idx]], cf->wdata[cf->pc_idx[0][idx]]);
+      }
+      else {
+        WRITE_LINE("%c Number of tracers: %zu (auto pair counts)\n",
+            FCFC_SAVE_COMMENT, cf->ndata[cf->pc_idx[0][idx]]);
+      }
     }
     else {                                              /* cross pairs */
-      WRITE_LINE("%c Numbers of tracers: %zu and %zu\n",
-          FCFC_SAVE_COMMENT, cf->ndata[cf->pc_idx[0][idx]],
-          cf->ndata[cf->pc_idx[1][idx]]);
+      if (usewt) {
+        WRITE_LINE("%c Numbers of tracers: %zu and %zu (weighted: " OFMT_DBL
+            " and " OFMT_DBL ")\n",
+            FCFC_SAVE_COMMENT, cf->ndata[cf->pc_idx[0][idx]],
+            cf->ndata[cf->pc_idx[1][idx]], cf->wdata[cf->pc_idx[0][idx]],
+            cf->wdata[cf->pc_idx[1][idx]]);
+      }
+      else{
+        WRITE_LINE("%c Numbers of tracers: %zu and %zu\n",
+            FCFC_SAVE_COMMENT, cf->ndata[cf->pc_idx[0][idx]],
+            cf->ndata[cf->pc_idx[1][idx]]);
+      }
     }
     WRITE_LINE("%c Normalization (total number of pairs): " OFMT_DBL
         "\n", FCFC_SAVE_COMMENT, cf->norm[idx]);
