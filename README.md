@@ -72,9 +72,13 @@ This program benefits from the following open-source projects:
 -   [https://github.com/andralex/MedianOfNinthers](https://github.com/andralex/MedianOfNinthers) (see also [this paper](http://dx.doi.org/10.4230/LIPIcs.SEA.2017.24))
 -   [https://github.com/swenson/sort](https://github.com/swenson/sort)
 
+<sub>[\[TOC\]](#table-of-contents)</sub>
+
 ## References
 
 TBE
+
+<sub>[\[TOC\]](#table-of-contents)</sub>
 
 ## TODO
 
@@ -83,3 +87,5 @@ TBE
 -   3-point correlation functions
 -   Approximate correlation function calculators
 -   More data structures for potentially faster correlation function evaluation
+
+<sub>[\[TOC\]](#table-of-contents)</sub>

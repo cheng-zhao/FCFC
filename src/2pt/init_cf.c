@@ -421,14 +421,9 @@ CF *cf_init(const CONF *conf) {
     P_ERR("failed to allocate memory for the number of input objects\n");
     cf_destroy(cf); return NULL;
   }
-  for (int i = 0; i < cf->ncat; i++) {
-    if (cf->wt[i]) {
-      if (!(cf->wdata = calloc(cf->ncat, sizeof(double)))) {
-        P_ERR("failed to allocate memory for the weighted number of inputs\n");
-        cf_destroy(cf); return NULL;
-      }
-      break;
-    }
+  if (!(cf->wdata = calloc(cf->ncat, sizeof(double)))) {
+    P_ERR("failed to allocate memory for the weighted number of inputs\n");
+    cf_destroy(cf); return NULL;
   }
 
   if (!(cf->cnt = malloc(sizeof(pair_count_t *) * cf->npc))) {
