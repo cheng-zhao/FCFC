@@ -22,10 +22,6 @@
 #include <omp.h>
 #endif
 
-#ifdef DEBUG
-#include <time.h>
-#endif
-
 /*============================================================================*\
                      Data structure for storing dual nodes
 \*============================================================================*/
@@ -1017,14 +1013,8 @@ void count_pairs(const void *tree1, const void *tree2, CF *cf, size_t *cnt,
       stack.nodes[size - 1] = tmp;
     }
     else size = stack.size;
-#ifdef DEBUG
-    printf("-> size=%zu, stack.size=%zu\n", size, stack.size);
-#endif
   }
 
-#ifdef DEBUG
-  printf("\nsize=%zu, stack.size=%zu, nthread=%d\n",size,stack.size,cf->nthread);
-#endif
   /* Clean the array for storing thread-private pair counts. */
   memset(cf->pcnt, 0, sizeof(size_t) * cf->ntot * cf->nthread);
 #pragma omp parallel
@@ -1032,21 +1022,10 @@ void count_pairs(const void *tree1, const void *tree2, CF *cf, size_t *cnt,
     STACK_DUAL_NODE ps;         /* thread-private stack */
     ps.size = ps.capacity = 0;
     const int tid = omp_get_thread_num();
-#ifdef DEBUG
-    time_t timer;
-    char buffer[26];
-    struct tm* tm_info;
-#endif
 #pragma omp for schedule(dynamic)
     for (size_t i = 0; i < stack.size; i++) {
       stack_push(&ps, stack.nodes[i].a, stack.nodes[i].b);
       while (ps.size) pair_count_func(&ps, cf, cf->pcnt + tid * cf->ntot);
-#ifdef DEBUG
-      timer = time(NULL);
-      tm_info = localtime(&timer);
-      strftime(buffer, 26, "%Y-%m-%d %H:%M:%S", tm_info);
-      printf("=> thread %d: i=%zu, time=%s\n", tid, i, buffer);
-#endif
     }
     stack_destroy(&ps);
   }

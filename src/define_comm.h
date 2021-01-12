@@ -91,6 +91,8 @@
 #define FCFC_MAX_CHUNK       INT_MAX /* maximum allowed chunk size   */
 /* Initial number of objects allocated for the catalogs.        */
 #define FCFC_DATA_INIT_NUM   256
+/* Maximum number of objects stored for each thread.            */
+#define FCFC_DATA_THREAD_NUM 1024
 /* Comment symbol for the input files (apart from the catalog). */
 #define FCFC_READ_COMMENT    '#'
 /* Comment symbol for the output files.                         */

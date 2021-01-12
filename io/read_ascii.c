@@ -724,6 +724,18 @@ int read_ascii_data(const char *fname, const size_t skip, const char comment,
   #endif
     }
   }
+  /* Construct the private data pool. */
+  DATA **pdata = malloc(sizeof(DATA *) * nomp);
+  size_t *pndata = calloc(nomp, sizeof(size_t));
+  if (!pdata || !pndata) {
+    P_ERR("failed to allocate memory for the thread-private data.\n");
+    FCFC_QUIT(FCFC_ERR_MEMORY);
+  }
+  if (!(pdata[0] = malloc(sizeof(DATA) * nomp * FCFC_DATA_THREAD_NUM))) {
+    P_ERR("failed to allocate memory for the thread-private data.\n");
+    FCFC_QUIT(FCFC_ERR_MEMORY);
+  }
+  for (int j = 1; j < nomp; j++) pdata[j] = pdata[0] + j * FCFC_DATA_THREAD_NUM;
   /* Construct the pool for file lines. */
   size_t nlmax = FCFC_DATA_INIT_NUM;
   size_t nl = 0;
@@ -802,7 +814,7 @@ int read_ascii_data(const char *fname, const size_t skip, const char comment,
         }
       }
 
-      /* Record the coordinates. */
+      /* Record coordinates. */
       for (int i = 0; i < 3; i++) {
         if (ascii_read_real(ast_pos[i], col, &(dat[n].x[i]))) {
           CLEAN_PTR; return FCFC_ERR_AST;
@@ -890,6 +902,8 @@ int read_ascii_data(const char *fname, const size_t skip, const char comment,
   #endif
         col = pcol[tid - 1];
       }
+      DATA *pdat = pdata[tid];
+      size_t *pnum = pndata + tid;
       /* Process lines in parallel. */
   #pragma omp for
       for (size_t ii = 0; ii < nl; ii++) {
@@ -917,9 +931,9 @@ int read_ascii_data(const char *fname, const size_t skip, const char comment,
           if (!keep) continue;
         }
 
-        /* Record coordinates to the private data pool. */
+        /* Record coordinates in the private data pool. */
         for (int i = 0; i < 3; i++) {
-          if (ascii_read_real(ast_pos[i], col, &(dat[n + ii].x[i]))) {
+          if (ascii_read_real(ast_pos[i], col, &(pdat[*pnum].x[i]))) {
             FCFC_QUIT(FCFC_ERR_AST);
           }
         }
@@ -927,17 +941,39 @@ int read_ascii_data(const char *fname, const size_t skip, const char comment,
   #ifdef FCFC_DATA_WEIGHT
         /* Compute weights. */
         if (ast_wt) {
-          if (ascii_read_real(ast_wt, col, &(dat[n + ii].w))) {
+          if (ascii_read_real(ast_wt, col, &(pdat[*pnum].w))) {
             FCFC_QUIT(FCFC_ERR_AST);
           }
         }
-        else dat[n + ii].w = 1;
+        else pdat[*pnum].w = 1;
   #endif
 
+        /* Record the private data and clear the pool if necessary. */
+        if (++(*pnum) >= FCFC_DATA_THREAD_NUM) {
+  #pragma omp critical
+          {
+            /* Enlarge the memory for the data if necessary. */
+            if (n + FCFC_DATA_THREAD_NUM >= max) {
+              if (SIZE_MAX / 2 < max) {
+                P_ERR("too many objects in the file: `%s'.\n", fname);
+                FCFC_QUIT(FCFC_ERR_FILE);
+              }
+              max <<= 1;
+              if (max < FCFC_DATA_THREAD_NUM) max = FCFC_DATA_THREAD_NUM;
+              DATA *tmp = realloc(dat, sizeof(DATA) * max);
+              if (!tmp) {
+                P_ERR("failed to allocate memory for the data.\n");
+                FCFC_QUIT(FCFC_ERR_MEMORY);
+              }
+              dat = tmp;
+            }
+            memcpy(dat + n, pdat, sizeof(DATA) * FCFC_DATA_THREAD_NUM);
+            n += FCFC_DATA_THREAD_NUM;
+          }
+          *pnum = 0;
+        }
       }
     }
-
-    n += nl;
     nl = 0;
 #endif
 
@@ -947,6 +983,27 @@ int read_ascii_data(const char *fname, const size_t skip, const char comment,
   }
 
 #ifdef OMP
+  /* Record the rest of the private data. */
+  for (int i = 0; i < nomp; i++) {
+    if (pndata[i]) {
+      /* Enlarge the memory for the data if necessary. */
+      if (n + pndata[i] >= max) {
+        if (SIZE_MAX / 2 < max) {
+          P_ERR("too many objects in the file: `%s'.\n", fname);
+          FCFC_QUIT(FCFC_ERR_FILE);
+        }
+        max <<= 1;
+        DATA *tmp = realloc(dat, sizeof(DATA) * max);
+        if (!tmp) {
+          P_ERR("failed to allocate memory for the data.\n");
+          FCFC_QUIT(FCFC_ERR_MEMORY);
+        }
+        dat = tmp;
+      }
+      memcpy(dat + n, pdata[i], sizeof(DATA) * pndata[i]);
+      n += pndata[i];
+    }
+  }
   /* Release memory for thread-private data structures. */
   for (int i = 0; i < nomp - 1; i++) {
     free(pcol[i]);
@@ -955,6 +1012,7 @@ int read_ascii_data(const char *fname, const size_t skip, const char comment,
     if (ast_pwt[i]) ast_destroy(ast_pwt[i]);
   #endif
   }
+  free(pdata[0]); free(pdata); free(pndata);
   for (int i = 0; i < (nomp - 1) * 3; i++) ast_destroy(ast_ppos[i]);
   free(pcol); free(ast_ppos); free(ast_psel);
   #ifdef FCFC_DATA_WEIGHT
