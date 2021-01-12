@@ -1187,16 +1187,16 @@ int cfg_read_file(cfg_t *cfg, const char *fname, const int prior) {
     return CFG_ERRNO(cfg) = CFG_ERR_MEMORY;
   }
 
-  size_t nline, nrest, cnt;
+  size_t nline, nrest, nproc, cnt;
   char *key, *value;
   cfg_parse_state_t state = CFG_PARSE_START;
-  nline = nrest = 0;
+  nline = nrest = nproc = 0;
   key = value = NULL;
   cfg_param_valid_t *params = (cfg_param_valid_t *) cfg->params;
 
   while ((cnt = fread(chunk + nrest, sizeof(char), clen - nrest, fp))) {
-    char *p = chunk;
-    char *end = p + nrest + cnt;
+    char *p = (state == CFG_PARSE_ARRAY_START) ? chunk + nproc : chunk;
+    char *end = chunk + nrest + cnt;
     char *endl;
     if (cnt < clen - nrest) *end++ = '\n';      /* terminate the last line */
 
@@ -1291,6 +1291,7 @@ int cfg_read_file(cfg_t *cfg, const char *fname, const int prior) {
       }
       /* `key` is the starting point of this effective line */
       nrest = end - key;
+      nproc = p - key;
       memmove(chunk, key, nrest);
       /* shift `key` and `value` */
       if (value) value -= key - chunk;
@@ -1299,6 +1300,31 @@ int cfg_read_file(cfg_t *cfg, const char *fname, const int prior) {
     else {                      /* copy only from the current position */
       nrest = end - p;
       memmove(chunk, p, nrest);
+    }
+
+    /* The chunk is full. */
+    if (nrest == clen) {
+      size_t new_len = 0;
+      if (clen >= CFG_STR_MAX_DOUBLE_SIZE) {
+        if (SIZE_MAX - CFG_STR_MAX_DOUBLE_SIZE >= clen)
+          new_len = clen + CFG_STR_MAX_DOUBLE_SIZE;
+      }
+      else if (SIZE_MAX / 2 >= clen) new_len = clen << 1;
+      if (!new_len) {
+        cfg_msg(cfg, "failed to allocate memory for reading the file", fname);
+        return CFG_ERRNO(cfg) = CFG_ERR_MEMORY;
+      }
+      size_t key_shift = key ? key - chunk : 0;
+      size_t value_shift = value ? value - chunk : 0;
+      char *tmp = realloc(chunk, new_len);
+      if (!tmp) {
+        cfg_msg(cfg, "failed to allocate memory for reading the file", fname);
+        return CFG_ERRNO(cfg) = CFG_ERR_MEMORY;
+      }
+      chunk = tmp;
+      clen = new_len;
+      if (key) key = chunk + key_shift;
+      if (value) value = chunk + value_shift;
     }
   }
 
