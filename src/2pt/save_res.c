@@ -89,7 +89,7 @@ int save_res(const CONF *conf, const CF *cf, const int idx,
     if (cf->pc_idx[0][idx] == cf->pc_idx[1][idx]) {     /* auto pairs */
       if (usewt) {
         WRITE_LINE("%c Number of tracers: %zu (auto pair counts, "
-            "weighted number: " OFMT_DBL ")\n", FCFC_SAVE_COMMENT,
+            "weighted number: " OFMT_DBL " )\n", FCFC_SAVE_COMMENT,
             cf->ndata[cf->pc_idx[0][idx]], cf->wdata[cf->pc_idx[0][idx]]);
       }
       else {
@@ -100,7 +100,7 @@ int save_res(const CONF *conf, const CF *cf, const int idx,
     else {                                              /* cross pairs */
       if (usewt) {
         WRITE_LINE("%c Numbers of tracers: %zu and %zu (weighted: " OFMT_DBL
-            " and " OFMT_DBL ")\n",
+            " and " OFMT_DBL " )\n",
             FCFC_SAVE_COMMENT, cf->ndata[cf->pc_idx[0][idx]],
             cf->ndata[cf->pc_idx[1][idx]], cf->wdata[cf->pc_idx[0][idx]],
             cf->wdata[cf->pc_idx[1][idx]]);

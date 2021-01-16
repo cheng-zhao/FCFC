@@ -420,7 +420,9 @@ static cfg_t *conf_read(CONF *conf, const int argc, char *const *argv) {
 
   /* Read parameters from configuration file. */
   if (!cfg_is_set(cfg, &conf->fconf)) conf->fconf = DEFAULT_CONF_FILE;
-  if (cfg_read_file(cfg, conf->fconf, FCFC_PRIOR_FILE)) P_CFG_ERR(cfg);
+  if (access(conf->fconf, R_OK))
+    P_WRN("cannot access the configuration file: `%s'\n", conf->fconf);
+  else if (cfg_read_file(cfg, conf->fconf, FCFC_PRIOR_FILE)) P_CFG_ERR(cfg);
   P_CFG_WRN(cfg);
 
   return cfg;
@@ -1068,6 +1070,9 @@ Return:
   The structure for storing configurations.
 ******************************************************************************/
 CONF *load_conf(const int argc, char *const *argv) {
+  printf("Loading configurations ...");
+  fflush(stdout);
+
   CONF *conf = conf_init();
   if (!conf) return NULL;
 
@@ -1076,9 +1081,6 @@ CONF *load_conf(const int argc, char *const *argv) {
     conf_destroy(conf);
     return NULL;
   }
-
-  printf("Loading configurations ...");
-  fflush(stdout);
 
   if (conf_verify(cfg, conf)) {
     if (cfg_is_set(cfg, &conf->fconf)) free(conf->fconf);
