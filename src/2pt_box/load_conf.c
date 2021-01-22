@@ -1070,9 +1070,6 @@ Return:
   The structure for storing configurations.
 ******************************************************************************/
 CONF *load_conf(const int argc, char *const *argv) {
-  printf("Loading configurations ...");
-  fflush(stdout);
-
   CONF *conf = conf_init();
   if (!conf) return NULL;
 
@@ -1081,6 +1078,9 @@ CONF *load_conf(const int argc, char *const *argv) {
     conf_destroy(conf);
     return NULL;
   }
+
+  printf("Loading configurations ...");
+  fflush(stdout);
 
   if (conf_verify(cfg, conf)) {
     if (cfg_is_set(cfg, &conf->fconf)) free(conf->fconf);

@@ -28,7 +28,7 @@ This program is compliant with the ISO C99 and IEEE POSIX.1-2008 standards, and 
 
 If you use this program in research that results in publications, please cite the following paper:
 
-> Zhao et al., in preparation.
+> Zhao et al. 2020, [arXiv:2007.08997](https://ui.adsabs.harvard.edu/abs/2020arXiv200708997Z/abstract)
 
 <sub>[\[TOC\]](#table-of-contents)</sub>
 
