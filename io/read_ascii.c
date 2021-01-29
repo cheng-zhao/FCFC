@@ -959,7 +959,8 @@ int read_ascii_data(const char *fname, const size_t skip, const char comment,
                 FCFC_QUIT(FCFC_ERR_FILE);
               }
               max <<= 1;
-              if (max < FCFC_DATA_THREAD_NUM) max = FCFC_DATA_THREAD_NUM;
+              if (max < n + FCFC_DATA_THREAD_NUM)
+                max = n + FCFC_DATA_THREAD_NUM;
               DATA *tmp = realloc(dat, sizeof(DATA) * max);
               if (!tmp) {
                 P_ERR("failed to allocate memory for the data.\n");
@@ -993,6 +994,7 @@ int read_ascii_data(const char *fname, const size_t skip, const char comment,
           FCFC_QUIT(FCFC_ERR_FILE);
         }
         max <<= 1;
+        if (max < n + pndata[i]) max = n + pndata[i];
         DATA *tmp = realloc(dat, sizeof(DATA) * max);
         if (!tmp) {
           P_ERR("failed to allocate memory for the data.\n");

@@ -1,9 +1,9 @@
 # Fast Correlation Function Calculator (FCFC)
 
-<img src="doc/logo/FCFC_logo.svg" align="right" />
-
 ![GitHub](https://img.shields.io/github/license/cheng-zhao/FCFC.svg)
 ![Codacy grade](https://img.shields.io/codacy/grade/4a85732bb6264027aefac7f002550cdd.svg)
+
+<img src="doc/logo/FCFC_logo.svg" align="right" />
 
 ## Table of Contents
 
