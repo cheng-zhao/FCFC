@@ -54,6 +54,8 @@ void *tree_create(const CONF *conf, CF *cf, const int idx, const int type) {
   const char cmt = (conf->comment) ? conf->comment[idx] : DEFAULT_ASCII_COMMENT;
   const char *wt = (conf->has_wt[idx]) ? conf->wt[idx] : NULL;
   const char *sel = (conf->sel) ? conf->sel[idx] : NULL;
+  if (sel && ((sel[0] == '\'' && sel[1] == '\'') ||
+      (sel[0] == '"' && sel[1] == '"')) && sel[2] == '\0') sel = NULL;
   if (read_ascii_data(conf->input[idx], skip, cmt, conf->fmtr[idx],
       conf->pos + idx * 3, wt, sel, cf->data + idx, cf->ndata + idx,
       conf->verbose)) return NULL;
