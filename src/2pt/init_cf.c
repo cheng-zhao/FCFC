@@ -171,9 +171,6 @@ CF *cf_init(const CONF *conf) {
   cf->ns = conf->nsbin;
   cf->nmu = conf->nmu;
   cf->np = conf->npbin;
-  if (cf->bintype == FCFC_BIN_SMU) cf->ntot = (size_t) cf->ns * cf->nmu;
-  else if (cf->bintype == FCFC_BIN_SPI) cf->ntot = (size_t) cf->ns * cf->np;
-  else  cf->ntot = cf->ns;      /* cf->bintype == FCFC_BIN_ISO */
 
   cf->ncat = conf->ninput;
   cf->label = conf->label;
@@ -297,6 +294,10 @@ CF *cf_init(const CONF *conf) {
     cf->p2min = cf->p2bin[0];
     cf->p2max = cf->p2bin[cf->np];
   }
+
+  if (cf->bintype == FCFC_BIN_SMU) cf->ntot = (size_t) cf->ns * cf->nmu;
+  else if (cf->bintype == FCFC_BIN_SPI) cf->ntot = (size_t) cf->ns * cf->np;
+  else  cf->ntot = cf->ns;      /* cf->bintype == FCFC_BIN_ISO */
 
   /* Setup lookup tables. */
   if (cf->prec != REAL_NAN) {

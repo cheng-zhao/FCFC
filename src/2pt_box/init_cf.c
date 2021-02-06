@@ -66,7 +66,7 @@ static int cf_expression(const CONF *conf, CF *cf) {
         if (*c == FCFC_SYM_ANA_RR && *c == c[1]) {
           num = cf->npc + 1;
           /* Allocate memory for analytical RR. */
-          if (!(cf->rr = malloc(sizeof(double) * cf->ntot))) {
+          if (!cf->rr && !(cf->rr = malloc(sizeof(double) * cf->ntot))) {
             P_ERR("failed to allocate memory for analytical RR\n");
             return FCFC_ERR_MEMORY;
           }
@@ -181,9 +181,6 @@ CF *cf_init(const CONF *conf) {
   cf->ns = conf->nsbin;
   cf->nmu = conf->nmu;
   cf->np = conf->npbin;
-  if (cf->bintype == FCFC_BIN_SMU) cf->ntot = (size_t) cf->ns * cf->nmu;
-  else if (cf->bintype == FCFC_BIN_SPI) cf->ntot = (size_t) cf->ns * cf->np;
-  else  cf->ntot = cf->ns;      /* cf->bintype == FCFC_BIN_ISO */
 
   cf->ncat = conf->ninput;
   cf->label = conf->label;
@@ -296,6 +293,10 @@ CF *cf_init(const CONF *conf) {
     cf->pmin = cf->pbin[0];
     cf->pmax = cf->pbin[cf->np];
   }
+
+  if (cf->bintype == FCFC_BIN_SMU) cf->ntot = (size_t) cf->ns * cf->nmu;
+  else if (cf->bintype == FCFC_BIN_SPI) cf->ntot = (size_t) cf->ns * cf->np;
+  else  cf->ntot = cf->ns;      /* cf->bintype == FCFC_BIN_ISO */
 
   /* Setup lookup tables. */
   if (cf->prec != REAL_NAN) {
