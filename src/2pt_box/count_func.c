@@ -327,14 +327,16 @@ static inline real max_squared_dist_between_box(const DATA *restrict min1,
     if (min1->x[i] + max1->x[i] < min2->x[i] + max2->x[i]) {
       d1 = max2->x[i] - min1->x[i];
       if (d1 * 2 > bsize) d1 -= bsize;
-      d2 = min2->x[i] - max1->x[i];
+      d2 = max1->x[i] - min2->x[i];
+      if (d2 < 0) d2 += bsize;
     }
     else {
       d1 = max1->x[i] - min2->x[i];
       if (d1 * 2 > bsize) d1 -= bsize;
-      d2 = min1->x[i] - max2->x[i];
+      d2 = max2->x[i] - min1->x[i];
+      if (d2 < 0) d2 += bsize;
     }
-    real d = (d1 > d2) ? d2 : d1;
+    real d = (d1 > d2) ? d1 : d2;
     sum += d * d;
   }
   return sum;
@@ -359,14 +361,16 @@ static inline real max_unsigned_dist_par_between_box(const DATA *restrict min1,
   if (min1->x[2] + max1->x[2] < min2->x[2] + max2->x[2]) {
     d1 = max2->x[2] - min1->x[2];
     if (d1 * 2 > bsize) d1 -= bsize;
-    d2 = min2->x[2] - max1->x[2];
+    d2 = max1->x[2] - min2->x[2];
+    if (d2 < 0) d2 += bsize;
   }
   else {
     d1 = max1->x[2] - min2->x[2];
     if (d1 * 2 > bsize) d1 -= bsize;
-    d2 = min1->x[2] - max2->x[2];
+    d2 = max2->x[2] - min1->x[2];
+    if (d2 < 0) d2 += bsize;
   }
-  real d = (d1 > d2) ? d2 : d1;
+  real d = (d1 > d2) ? d1 : d2;
   return d;
 }
 
@@ -391,14 +395,16 @@ static inline real max_squared_dist_perp_between_box(const DATA *restrict min1,
     if (min1->x[i] + max1->x[i] < min2->x[i] + max2->x[i]) {
       d1 = max2->x[i] - min1->x[i];
       if (d1 * 2 > bsize) d1 -= bsize;
-      d2 = min2->x[i] - max1->x[i];
+      d2 = max1->x[i] - min2->x[i];
+      if (d2 < 0) d2 += bsize;
     }
     else {
       d1 = max1->x[i] - min2->x[i];
       if (d1 * 2 > bsize) d1 -= bsize;
-      d2 = min1->x[i] - max2->x[i];
+      d2 = max2->x[i] - min1->x[i];
+      if (d2 < 0) d2 += bsize;
     }
-    real d = (d1 > d2) ? d2 : d1;
+    real d = (d1 > d2) ? d1 : d2;
     sum += d * d;
   }
   return sum;

@@ -141,17 +141,17 @@ static void PAIR_COUNT_FUNC(FCFC_TREE_TYPE_NAME, FCFC_CNT_TYPE_NAME,
        range of interest. */
 #if     FCFC_BIN_TYPE == FCFC_BIN_SPI
   #if     FCFC_BIN_PMIN == FCFC_BIN_MIN_NONZERO
-    if (unsigned_distance_par(&node1->min, &node1->max, cf->bsize) < cf->pmin)
-      return;
+    if (max_unsigned_dist_par_between_box(&node1->min, &node1->max,
+          &node1->min, &node1->max, cf->bsize) < cf->pmin) return;
   #endif
   #if     FCFC_BIN_SMIN == FCFC_BIN_MIN_NONZERO
-    if (squared_distance_perp(&node1->min, &node1->max, cf->bsize) < cf->s2min)
-      return;
+    if (max_squared_dist_perp_between_box(&node1->min, &node1->max,
+          &node1->min, &node1->max, cf->bsize) < cf->s2min) return;
   #endif
 #else   /* FCFC_BIN_TYPE == FCFC_BIN_ISO or FCFC_BIN_SMU */
   #if     FCFC_BIN_SMIN == FCFC_BIN_MIN_NONZERO
-    if (squared_distance(&node1->min, &node1->max, cf->bsize) < cf->s2min)
-      return;
+    if (max_squared_dist_between_box(&node1->min, &node1->max,
+          &node1->min, &node1->max, cf->bsize) < cf->s2min) return;
   #endif
 #endif
     /* Compare all the pairs if the node is a leaf. */
