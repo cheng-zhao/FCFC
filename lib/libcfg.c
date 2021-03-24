@@ -48,7 +48,6 @@
 #define CFG_SRC_NULL            0
 #define CFG_SRC_OF_OPT(x)       (-x)    /* -x for source being command line */
 #define CFG_SRC_VAL(x)          ((x < 0) ? -(x) : x)              /* abs(x) */
-#define CFG_SRC_FROM_OPT(x)     (x < 0)  /* check if source is command line */
 
 /* Definitions of error codes. */
 #define CFG_ERR_INIT            (-1)
@@ -759,32 +758,30 @@ static int cfg_get_value(void *var, char *str, const size_t size,
   char *value = str;
   int n;
 
-  /* Validate the value if it is not from command line options. */
-  if (!CFG_SRC_FROM_OPT(src)) {
-    while (*value && isspace(*value)) value++;          /* omit whitespaces */
-    if (*value == '\0') return CFG_ERR_VALUE;           /* empty string */
-    if (*value == '"' || *value == '\'') {              /* remove quotes */
-      char quote = *value;
-      value++;
-      for (n = 0; value[n]; n++) {      /* the string is surely terminated */
-        if (value[n] == quote) {
-          value[n] = '\0';
-          quote = 0;    /* a flag indicating the other quote is found */
-          break;
-        }
+  /* Validate the value. */
+  while (*value && isspace(*value)) value++;          /* omit whitespaces */
+  if (*value == '\0') return CFG_ERR_VALUE;           /* empty string */
+  if (*value == '"' || *value == '\'') {              /* remove quotes */
+    char quote = *value;
+    value++;
+    for (n = 0; value[n]; n++) {      /* the string is surely terminated */
+      if (value[n] == quote) {
+        value[n] = '\0';
+        quote = 0;    /* a flag indicating the other quote is found */
+        break;
       }
-      /* empty string with quotes is valid for char or string type variable */
-      if (*value == '\0' && dtype != CFG_DTYPE_CHAR && dtype != CFG_DTYPE_STR)
-        return CFG_ERR_VALUE;
-      if (quote) return CFG_ERR_VALUE;          /* open quotation marks */
-      for (++n; value[n]; n++) if (!isspace(value[n])) return CFG_ERR_VALUE;
     }
-    else {                              /* remove trailing whitespaces */
-      char *val = str + size - 2;
-      while (isspace(*val)) {
-        *val = '\0';
-        val--;
-      }
+    /* empty string with quotes is valid for char or string type variable */
+    if (*value == '\0' && dtype != CFG_DTYPE_CHAR && dtype != CFG_DTYPE_STR)
+      return CFG_ERR_VALUE;
+    if (quote) return CFG_ERR_VALUE;          /* open quotation marks */
+    for (++n; value[n]; n++) if (!isspace(value[n])) return CFG_ERR_VALUE;
+  }
+  else {                              /* remove trailing whitespaces */
+    char *val = str + size - 2;
+    while (isspace(*val)) {
+      *val = '\0';
+      val--;
     }
   }
 
