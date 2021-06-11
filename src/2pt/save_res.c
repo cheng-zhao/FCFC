@@ -200,7 +200,7 @@ int save_res(const CONF *conf, const CF *cf, const int idx,
           for (int i = 0; i < cf->ns; i++) {
             WRITE_LINE(OFMT_DBL " " OFMT_DBL " " OFMT_DBL " " OFMT_DBL " "
                 OFMT_DBL "\n", cf->sbin[i], cf->sbin[i + 1],
-                cf->pbin[i], cf->pbin[i + 1], res[idx][i + j * cf->ns]);
+                cf->pbin[j], cf->pbin[j + 1], res[idx][i + j * cf->ns]);
           }
         }
       }

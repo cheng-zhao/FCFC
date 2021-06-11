@@ -37,7 +37,9 @@
   ast_destroy(ast_pos[0]); ast_destroy(ast_pos[1]);                     \
   ast_destroy(ast_pos[2]); ast_destroy(ast_sel);                        \
   ascii_arg_destroy(arg, nc); free(col);                                \
-  if (chunk) free(chunk); if (fp) fclose(fp); if (dat) free(dat);
+  if (chunk) free(chunk);                                               \
+  if (fp) fclose(fp);                                                   \
+  if (dat) free(dat);
 
 #ifdef FCFC_DATA_WEIGHT
   #define CLEAN_PTR     {CLEAN_PTR_NOWT; ast_destroy(ast_wt);}

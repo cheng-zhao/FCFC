@@ -1,5 +1,5 @@
 /*******************************************************************************
-* timsort.h: this file is part of the FCFC program.
+* timsort.c: this file is part of the FCFC program.
 
 * FCFC: Fast Correlation Function Calculator.
 
