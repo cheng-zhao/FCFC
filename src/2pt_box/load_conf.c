@@ -363,14 +363,12 @@ static cfg_t *conf_read(CONF *conf, const int argc, char *const *argv) {
   if (!cfg) P_CFG_ERR(cfg);
 
   /* Functions to be called via command line flags. */
-  const int nfunc = 2;
   const cfg_func_t funcs[] = {
     {   'h',        "help",             usage,          NULL},
     {   't',    "template",     conf_template,          NULL}
   };
 
   /* Configuration parameters. */
-  const int npar = 32;
   const cfg_param_t params[] = {
     {'c', "conf"        , "CONFIG_FILE"    , CFG_DTYPE_STR , &conf->fconf   },
     {'i', "input"       , "CATALOG"        , CFG_ARRAY_STR , &conf->input   },
@@ -407,9 +405,11 @@ static cfg_t *conf_read(CONF *conf, const int argc, char *const *argv) {
   };
 
   /* Register functions and parameters. */
-  if (cfg_set_funcs(cfg, funcs, nfunc)) P_CFG_ERR(cfg);
+  if (cfg_set_funcs(cfg, funcs, sizeof(funcs) / sizeof(funcs[0])))
+      P_CFG_ERR(cfg);
   P_CFG_WRN(cfg);
-  if (cfg_set_params(cfg, params, npar)) P_CFG_ERR(cfg);
+  if (cfg_set_params(cfg, params, sizeof(params) / sizeof(params[0])))
+      P_CFG_ERR(cfg);
   P_CFG_WRN(cfg);
 
   /* Read configurations from command line options. */

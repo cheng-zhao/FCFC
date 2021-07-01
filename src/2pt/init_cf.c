@@ -296,7 +296,13 @@ CF *cf_init(const CONF *conf) {
   }
 
   if (cf->bintype == FCFC_BIN_SMU) cf->ntot = (size_t) cf->ns * cf->nmu;
-  else if (cf->bintype == FCFC_BIN_SPI) cf->ntot = (size_t) cf->ns * cf->np;
+  else if (cf->bintype == FCFC_BIN_SPI) {
+    cf->sp2min = cf->s2min;
+    cf->sp2max = cf->s2max;
+    cf->s2min += cf->p2min;
+    cf->s2max += cf->p2max;
+    cf->ntot = (size_t) cf->ns * cf->np;
+  }
   else  cf->ntot = cf->ns;      /* cf->bintype == FCFC_BIN_ISO */
 
   /* Setup lookup tables. */
@@ -327,11 +333,6 @@ CF *cf_init(const CONF *conf) {
 
     /* Setup the table for squared pi bins. */
     if (cf->bintype == FCFC_BIN_SPI) {
-      cf->sp2min = cf->s2min;
-      cf->sp2max = cf->s2max;
-      cf->s2min += cf->p2min;
-      cf->s2max += cf->p2max;
-
       min = cf->p2bin[0];
       max = cf->p2bin[cf->np];
       offset = (size_t) (min * cf->prec);
