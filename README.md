@@ -5,6 +5,10 @@
 
 <img src="doc/logo/FCFC_logo.svg" align="right" />
 
+## Warning
+
+**This version of FCFC is depreciated and contains a few bugs for *&xi;*(*s*<sub>perp</sub>, *&pi;*), when *s*<sub>perp</sub> and *&pi;* do not start from 0. Please use the main branch instead.**
+
 ## Table of Contents
 
 -   [Introduction](#introduction)
