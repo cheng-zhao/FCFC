@@ -30,7 +30,8 @@
 import numpy as np
 
 def read_pair_count(ifile, verbose=False):
-  '''Read a binary-format pair count file.
+  '''
+  Read a binary-format pair count file.
   Return:
     bin_type:   type of separation bins (0: s, 1: (s,mu), 2: (s_perp,pi))
     nsbin:      number of s or s_perp bins

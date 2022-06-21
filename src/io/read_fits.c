@@ -1017,7 +1017,7 @@ int read_fits_data(const char *fname, char *const *rcol_ids, const int nrcol,
   }
 
   if (verb) {
-    printf("  Number of rows processed in total: %zu\n"
+    printf("  Number of rows processed in total: %ld\n"
         "  Number of recorded objects: %zu\n", ntot, n);
   }
 

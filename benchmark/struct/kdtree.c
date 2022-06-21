@@ -459,7 +459,6 @@ static KDT *create_kdtree(DATA *data, const size_t nleaf) {
 
 #ifdef BENCHMARK_TREE_AS_ARRAY
   kdtree_build(root, x, 0, data->n, nleaf);
-  if (!root) return NULL;
 #elif defined(BENCHMARK_TREE_PREALLOC)
   #if BENCHMARK_SIMD != BENCHMARK_SIMD_NONE
   /* Allocate memory for bounding box properties. */

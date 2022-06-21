@@ -657,7 +657,7 @@ KDT **kdtree_get_nodes(const KDT *root, const uint32_t nmin, size_t *nnode) {
   gather_nodes(root, 0, level, (const KDT **) nodes, nnode);
 
   /* Reduce memory cost if applicable. */
-  if (*nnode < nmax) {
+  if (*nnode && *nnode < nmax) {
     KDT **tmp = realloc(nodes, *nnode * sizeof(KDT *));
     if (tmp) nodes = tmp;
   }

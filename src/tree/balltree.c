@@ -923,7 +923,7 @@ BLT **balltree_get_nodes(const BLT *root, const uint32_t nmin, size_t *nnode) {
   gather_nodes(root, 0, level, (const BLT **) nodes, nnode);
 
   /* Reduce memory cost if applicable. */
-  if (*nnode < nmax) {
+  if (*nnode && *nnode < nmax) {
     BLT **tmp = realloc(nodes, *nnode * sizeof(BLT *));
     if (tmp) nodes = tmp;
   }
