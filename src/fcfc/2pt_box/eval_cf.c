@@ -20,9 +20,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-#ifdef MPI
-#include <mpi.h>
-#endif
 #ifdef OMP
 #include <omp.h>
 #endif
@@ -46,14 +43,13 @@ Function `eval_pairs`:
 Arguments:
   * `conf`:     structure for storing configurations;
   * `cf`:       structure for correlation function evaluations;
-  * `ntask`:    number of MPI tasks;
-  * `rank`:     ID of MPI task.
+  * `para`:     structure for parallelisms.
 Return:
   Zero on success; non-zero on error.
 ******************************************************************************/
 static int eval_pairs(const CONF *conf, CF *cf
 #ifdef MPI
-    , const int ntask, const int rank
+    , const PARA *para
 #endif
     ) {
   /* Allocate memory for trees. */
@@ -68,7 +64,7 @@ static int eval_pairs(const CONF *conf, CF *cf
     /* Read pair counts from file if applicable. */
     if (!cf->comp_pc[i]) {
 #ifdef MPI
-      if (rank == FCFC_MPI_ROOT) {
+      if (para->rank == para->root) {
 #endif
         printf("Reading %s pairs ...", conf->pc[i]);
         if (conf->verbose) printf("\n  Filename: %s\n", conf->pcout[i]);
@@ -98,7 +94,7 @@ static int eval_pairs(const CONF *conf, CF *cf
       if (!tree[idx]) {
         if (!(tree[idx] = tree_create(conf, cf, idx
 #ifdef MPI
-            , rank
+            , para
 #endif
             ))) {
           CLEAN_TREE;
@@ -109,7 +105,7 @@ static int eval_pairs(const CONF *conf, CF *cf
 
     /* Count pairs. */
 #ifdef MPI
-    if (rank == FCFC_MPI_ROOT) {
+    if (para->rank == para->root) {
 #endif
       printf("Counting %c%c pairs ...", cf->label[cat[0]], cf->label[cat[1]]);
       if (conf->verbose) printf("\n");
@@ -122,9 +118,9 @@ static int eval_pairs(const CONF *conf, CF *cf
 #ifndef MPI
       count_pairs(tree[cat[0]], tree[cat[0]], cf, cf->cnt[i], true, cf->wt[i]);
 #else
-      if (rank == FCFC_MPI_ROOT) {
+      if (para->rank == para->root) {
         count_pairs(tree[cat[0]], tree[cat[0]], cf, cf->cnt[i], true,
-            cf->wt[i], ntask, rank);
+            cf->wt[i], para);
 #endif
         /* Double auto pairs. */
         if (cf->wt[i]) {
@@ -138,28 +134,28 @@ static int eval_pairs(const CONF *conf, CF *cf
 #ifdef MPI
       }
       else count_pairs(tree[cat[0]], tree[cat[0]], cf, cf->cnt[0], true,
-          cf->wt[i], ntask, rank);
+          cf->wt[i], para);
 #endif
     }
     else {                              /* cross counts */
 #ifndef MPI
       count_pairs(tree[cat[0]], tree[cat[1]], cf, cf->cnt[i], false, cf->wt[i]);
 #else
-      if (rank == FCFC_MPI_ROOT) {
+      if (para->rank == para->root) {
         count_pairs(tree[cat[0]], tree[cat[1]], cf, cf->cnt[i], false,
-            cf->wt[i], ntask, rank);
+            cf->wt[i], para);
 #endif
         if (cf->wt[i]) cf->norm[i] = cf->data[cat[0]].wt * cf->data[cat[1]].wt;
         else cf->norm[i] = (double) cf->data[cat[0]].n * cf->data[cat[1]].n;
 #ifdef MPI
       }
       else count_pairs(tree[cat[0]], tree[cat[1]], cf, cf->cnt[0], false,
-          cf->wt[i], ntask, rank);
+          cf->wt[i], para);
 #endif
     }
     /* Normalise pair counts. */
 #ifdef MPI
-    if (rank == FCFC_MPI_ROOT) {
+    if (para->rank == para->root) {
 #endif
       if (cf->wt[i]) {
         for (size_t k = 0; k < cf->ntot; k++)
@@ -206,7 +202,7 @@ static int eval_pairs(const CONF *conf, CF *cf
       }
     }
 #ifdef MPI
-    if (rank == FCFC_MPI_ROOT) {
+    if (para->rank == para->root) {
 #endif
       printf(FMT_DONE);
 #ifdef MPI
@@ -219,7 +215,7 @@ static int eval_pairs(const CONF *conf, CF *cf
 
   /* Compute analytical RR if necessary (with unrescaled values). */
 #ifdef MPI
-  if (rank == FCFC_MPI_ROOT) {
+  if (para->rank == para->root) {
 #endif
     if (cf->rr) {
       if (cf->bintype == FCFC_BIN_SPI) {
@@ -402,24 +398,23 @@ Function `eval_cf`:
 Arguments:
   * `conf`:     structure for storing configurations;
   * `cf`:       structure for correlation function evaluations;
-  * `ntask`:    number of MPI tasks;
-  * `rank`:     ID of MPI task.
+  * `para`:     structure for parallelisms.
 Return:
   Zero on success; non-zero on error.
 ******************************************************************************/
 int eval_cf(const CONF *conf, CF *cf
 #ifdef MPI
-    , const int ntask, const int rank
+    , const PARA *para
 #endif
     ) {
   int e;
   if ((e = eval_pairs(conf, cf
 #ifdef MPI
-      , ntask, rank
+      , para
 #endif
       ))) return e;
 #ifdef MPI
-  if (rank == FCFC_MPI_ROOT) {
+  if (para->rank == para->root) {
 #endif
     if (cf->ncf) {
       if ((e = eval_cf_exp(conf, cf))) return e;

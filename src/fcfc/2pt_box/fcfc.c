@@ -11,48 +11,29 @@
 *******************************************************************************/
 
 #include "eval_cf.h"
-
+#include "define_para.h"
 #ifdef MPI
 #include <stdlib.h>
-#include <mpi.h>
-#endif
-#ifdef OMP
-#include <omp.h>
 #endif
 
 int main(int argc, char *argv[]) {
   CONF *conf = NULL;
   CF *cf = NULL;
 
-#ifdef MPI
-  /* MPI initialization. */
-  if (MPI_Init(NULL, NULL)) {
-    P_EXT("failed to initialize MPI\n");
-    FCFC_QUIT(FCFC_ERR_MPI);
-  }
-  int rank, ntask;
-  if (MPI_Comm_rank(MPI_COMM_WORLD, &rank)) {
-    P_EXT("failed to retrieve MPI ranks\n");
-    FCFC_QUIT(FCFC_ERR_MPI);
-  }
-  if (MPI_Comm_size(MPI_COMM_WORLD, &ntask)) {
-    P_EXT("failed to retrive the number of MPI tasks\n");
-    FCFC_QUIT(FCFC_ERR_MPI);
-  }
-
-  /* Initialize configurations with the root rank only. */
-  if (rank == FCFC_MPI_ROOT) {
+#ifdef WITH_PARA
+  /* Initialize parallelisms. */
+  PARA para;
+  para_init(&para);
 #endif
-#ifdef OMP
-    const int nthread = omp_get_max_threads();
+
+#ifdef MPI
+  /* Initialize configurations with the root rank only. */
+  if (para.rank == para.root) {
 #endif
 
     if (!(conf = load_conf(argc, argv
-#ifdef MPI
-        , ntask
-#endif
-#ifdef OMP
-        , nthread
+#ifdef WITH_PARA
+        , &para
 #endif
         ))) {
       printf(FMT_FAIL);
@@ -62,7 +43,7 @@ int main(int argc, char *argv[]) {
 
     if (!(cf = cf_setup(conf
 #ifdef OMP
-        , nthread
+        , &para
 #endif
         ))) {
       printf(FMT_FAIL);
@@ -75,12 +56,12 @@ int main(int argc, char *argv[]) {
   }
 
   /* Broadcast configurations. */
-  cf_setup_worker(&cf, rank);
+  cf_setup_worker(&cf, &para);
 #endif
 
   if (eval_cf(conf, cf
 #ifdef MPI
-      , ntask, rank
+      , &para
 #endif
       )) {
     printf(FMT_FAIL);

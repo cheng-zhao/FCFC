@@ -60,8 +60,8 @@ TARGETS = FCFC_2PT_BOX FCFC_2PT
 
 # Set mandatory options (do not edit below this line).
 LIBS += -lm
-INCL += -Isrc/fcfc/common -Isrc/io -Isrc/lib -Isrc/math -Isrc/tree
-SRCS = $(wildcard src/fcfc/common/*.c src/*/*.c)
+INCL += -Isrc/util -Isrc/io -Isrc/lib -Isrc/math -Isrc/tree
+SRCS = $(wildcard src/*/*.c)
 
 
 all: $(TARGETS)

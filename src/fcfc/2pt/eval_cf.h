@@ -32,6 +32,7 @@
 #define __EVAL_CF_H__
 
 #include "define.h"
+#include "define_para.h"
 #include "load_conf.h"
 #include "cnvt_coord.h"
 #include "libast.h"
@@ -121,13 +122,13 @@ Function `cf_setup`:
   Initialise the structure for correlation function evaluations.
 Arguments:
   * `conf`:     structure for storing configurations;
-  * `nthread`:  number of OpenMP threads.
+  * `para`:     structure for parallelisms.
 Return:
   Address of the structure for correlation function evaluations.
 ******************************************************************************/
 CF *cf_setup(const CONF *conf
 #ifdef OMP
-    , const int nthread
+    , const PARA *para
 #endif
     );
 
@@ -137,11 +138,11 @@ Function `cf_setup_worker`:
   Setup the correlation function configurations for MPI workers.
 Arguments:
   * `cf`:       structure for correlation function configurations;
-  * `rank`:     ID of MPI task.
+  * `para`:     structure for parallelisms.
 Return:
   Address of the structure for correlation function evaluations.
 ******************************************************************************/
-void cf_setup_worker(CF **cf, const int rank);
+void cf_setup_worker(CF **cf, const PARA *para);
 #endif
 
 /******************************************************************************
@@ -158,14 +159,13 @@ Function `eval_cf`:
 Arguments:
   * `conf`:     structure for storing configurations;
   * `cf`:       structure for correlation function evaluations;
-  * `ntask`:    number of MPI tasks;
-  * `rank`:     ID of MPI task.
+  * `para`:     structure for parallelisms.
 Return:
   Zero on success; non-zero on error.
 ******************************************************************************/
 int eval_cf(const CONF *conf, CF *cf
 #ifdef MPI
-    , const int ntask, const int rank
+    , const PARA *para
 #endif
     );
 

@@ -1192,15 +1192,11 @@ Function `conf_print`:
   Print configuration parameters.
 Arguments:
   * `conf`:     structure for storing configurations;
-  * `ntask`:    number of MPI tasks;
-  * `nthread`:  number of OpenMP threads.
+  * `para`:     structure for parallelisms.
 ******************************************************************************/
 static void conf_print(const CONF *conf
-#ifdef MPI
-    , const int ntask
-#endif
-#ifdef OMP
-    , const int nthread
+#ifdef WITH_PARA
+    , const PARA *para
 #endif
     ) {
   /* Configuration file */
@@ -1374,10 +1370,10 @@ static void conf_print(const CONF *conf
   printf("\n  OVERWRITE       = %d", conf->ovwrite);
 
 #ifdef MPI
-  printf("\n  MPI_NUM_TASKS   = %d", ntask);
+  printf("\n  MPI_NUM_TASKS   = %d", para->ntask);
 #endif
 #ifdef OMP
-  printf("\n  OMP_NUM_THREADS = %d", nthread);
+  printf("\n  OMP_NUM_THREADS = %d", para->nthread);
 #endif
   printf("\n");
 }
@@ -1393,17 +1389,13 @@ Function `load_conf`:
 Arguments:
   * `argc`:     number of arguments passed via command line;
   * `argv`:     array of command line arguments;
-  * `ntask`:    number of MPI tasks;
-  * `nthread`:  number of OpenMP threads.
+  * `para`:     structure for parallelisms.
 Return:
   The structure for storing configurations.
 ******************************************************************************/
 CONF *load_conf(const int argc, char *const *argv
-#ifdef MPI
-    , const int ntask
-#endif
-#ifdef OMP
-    , const int nthread
+#ifdef WITH_PARA
+    , const PARA *para
 #endif
     ) {
   CONF *conf = conf_init();
@@ -1427,11 +1419,8 @@ CONF *load_conf(const int argc, char *const *argv
 
   if (conf->verbose)
     conf_print(conf
-#ifdef MPI
-        , ntask
-#endif
-#ifdef OMP
-        , nthread
+#ifdef WITH_PARA
+        , para
 #endif
         );
 

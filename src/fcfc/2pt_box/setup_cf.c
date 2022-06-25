@@ -16,9 +16,6 @@
 #include <string.h>
 #include <limits.h>
 #include <math.h>
-#ifdef MPI
-#include <mpi.h>
-#endif
 
 /*============================================================================*\
                  Functions for setting up correlation functions
@@ -27,8 +24,6 @@
 /******************************************************************************
 Function `cf_init`:
   Initialise the structure for correlation function evaluations.
-Arguments:
-  * `nthread`:  number of OpenMP threads.
 Return:
   Address of the structure for correlation function evaluations.
 ******************************************************************************/
@@ -545,13 +540,13 @@ Function `cf_setup`:
   Setup the configurations for correlation function evaluations.
 Arguments:
   * `conf`:     structure for storing configurations;
-  * `nthread`:  number of OpenMP threads.
+  * `para`:     structure for parallelisms.
 Return:
   Address of the structure for correlation function evaluations.
 ******************************************************************************/
 CF *cf_setup(const CONF *conf
 #ifdef OMP
-    , const int nthread
+    , const PARA *para
 #endif
     ) {
   printf("Initializing the correlation function calculator ...");
@@ -566,7 +561,7 @@ CF *cf_setup(const CONF *conf
 
   /* Initialize configuration parameters. */
 #ifdef OMP
-  cf->nthread = nthread;
+  cf->nthread = para->nthread;
 #else
   cf->nthread = 1;
 #endif
@@ -858,51 +853,54 @@ Function `cf_setup_worker`:
   Setup the correlation function configurations for MPI workers.
 Arguments:
   * `cf`:       structure for correlation function configurations;
-  * `rank`:     ID of MPI task.
+  * `para`:     structure for parallelisms.
 Return:
   Address of the structure for correlation function evaluations.
 ******************************************************************************/
-void cf_setup_worker(CF **cf, const int rank) {
+void cf_setup_worker(CF **cf, const PARA *para) {
   if (!cf) {
     P_ERR("the correlation function settings are not initialized\n");
     FCFC_QUIT(FCFC_ERR_ARG);
   }
 
   /* Initialize the structure for MPI workers (non-root tasks). */
-  if (rank != FCFC_MPI_ROOT && !(*cf = cf_init())) {
+  if (para->rank != para->root && !(*cf = cf_init())) {
     P_ERR("failed to allocate memory for initializing MPI tasks\n");
     FCFC_QUIT(FCFC_ERR_MEMORY);
   }
   CF *c = *cf;
+#ifdef OMP
+  c->nthread = para->nthread;
+#else
+  c->nthread = 1;
+#endif
 
-  /* Broadcast variables. */
-  MPI_Request req[11];
-  if (MPI_Ibcast(c->bsize, 3, FCFC_MPI_REAL, FCFC_MPI_ROOT, MPI_COMM_WORLD,
-          req) ||
-      MPI_Ibcast(&c->bintype, 1, MPI_INT, FCFC_MPI_ROOT, MPI_COMM_WORLD,
-          req + 1) ||
-      MPI_Ibcast(&c->tabtype, 1, MPI_INT, FCFC_MPI_ROOT, MPI_COMM_WORLD,
-          req + 2) ||
-      MPI_Ibcast(&c->ns, 1, MPI_INT, FCFC_MPI_ROOT, MPI_COMM_WORLD, req + 3) ||
-      MPI_Ibcast(&c->np, 1, MPI_INT, FCFC_MPI_ROOT, MPI_COMM_WORLD, req + 4) ||
-      MPI_Ibcast(&c->nmu, 1, MPI_INT, FCFC_MPI_ROOT, MPI_COMM_WORLD, req + 5) ||
-      MPI_Ibcast(&c->nthread, 1, MPI_INT, FCFC_MPI_ROOT, MPI_COMM_WORLD,
-          req + 6) ||
-      MPI_Ibcast(&c->ntot, 1, FCFC_MPI_SIZE_T, FCFC_MPI_ROOT, MPI_COMM_WORLD,
-          req + 7) ||
-      MPI_Ibcast(&c->treetype, 1, MPI_INT, FCFC_MPI_ROOT, MPI_COMM_WORLD,
-          req + 8) ||
-      MPI_Ibcast(&c->ncat, 1, MPI_INT, FCFC_MPI_ROOT, MPI_COMM_WORLD,
-          req + 9) ||
-      MPI_Ibcast(&c->npc, 1, MPI_INT, FCFC_MPI_ROOT, MPI_COMM_WORLD,
-          req + 10) ||
-      MPI_Waitall(11, req, MPI_STATUSES_IGNORE)) {
+  /* Create a custom structure for broadcasting variables. */
+  MPI_Datatype dtypes[10] = {FCFC_MPI_REAL, MPI_INT, MPI_INT, MPI_INT,
+      MPI_INT, MPI_INT, MPI_INT, MPI_INT, FCFC_MPI_SIZE_T, MPI_INT};
+  int lengths[10] = {3, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+  MPI_Aint addrs[10];
+  MPI_Datatype send_type;
+  if (MPI_Get_address(c->bsize, addrs) ||
+      MPI_Get_address(&c->bintype, addrs + 1) ||
+      MPI_Get_address(&c->tabtype, addrs + 2) ||
+      MPI_Get_address(&c->ns, addrs + 3) ||
+      MPI_Get_address(&c->np, addrs + 4) ||
+      MPI_Get_address(&c->nmu, addrs + 5) ||
+      MPI_Get_address(&c->treetype, addrs + 6) ||
+      MPI_Get_address(&c->ncat, addrs + 7) ||
+      MPI_Get_address(&c->ntot, addrs + 8) ||
+      MPI_Get_address(&c->npc, addrs + 9) ||
+      MPI_Type_create_struct(10, lengths, addrs, dtypes, &send_type) ||
+      MPI_Type_commit(&send_type) ||
+      MPI_Bcast(MPI_BOTTOM, 1, send_type, para->root, para->comm) ||
+      MPI_Type_free(&send_type)) {
     P_ERR("failed to broadcast correlation function settings\n");
     FCFC_QUIT(FCFC_ERR_MPI);
   }
 
-  /* Allocate memory. */
-  if (rank != FCFC_MPI_ROOT) {
+  /* Allocate memory for workers. */
+  if (para->rank != para->root) {
     if (!(c->s2bin = malloc(sizeof(real) * (c->ns + 1))) ||
         (c->treetype == FCFC_STRUCT_BALLTREE &&
          !(c->sbin = malloc(sizeof(real) * (c->ns + 1)))) ||
@@ -928,29 +926,35 @@ void cf_setup_worker(CF **cf, const int rank) {
     for (int i = 0; i < c->ncat; i++) data_init(c->data + i);
   }
 
-  /* Broadcast pair count settings and bin edges. */
-  int nreq = 0;
-  if (MPI_Ibcast(c->wt, c->npc, MPI_C_BOOL, FCFC_MPI_ROOT, MPI_COMM_WORLD,
-          req + nreq++) ||
-      MPI_Ibcast(c->pc_idx[0], c->npc, MPI_INT, FCFC_MPI_ROOT, MPI_COMM_WORLD,
-          req + nreq++) ||
-      MPI_Ibcast(c->pc_idx[1], c->npc, MPI_INT, FCFC_MPI_ROOT, MPI_COMM_WORLD,
-          req + nreq++) ||
-      MPI_Ibcast(c->comp_pc, c->npc, MPI_C_BOOL, FCFC_MPI_ROOT, MPI_COMM_WORLD,
-          req + nreq++) ||
-      MPI_Ibcast(c->s2bin, c->ns + 1, FCFC_MPI_REAL, FCFC_MPI_ROOT,
-          MPI_COMM_WORLD, req + nreq++) ||
-      (c->treetype == FCFC_STRUCT_BALLTREE && MPI_Ibcast(c->sbin, c->ns + 1,
-          FCFC_MPI_REAL, FCFC_MPI_ROOT, MPI_COMM_WORLD, req + nreq++)) ||
-      (c->bintype == FCFC_BIN_SPI && MPI_Ibcast(c->pbin, c->np + 1,
-          FCFC_MPI_REAL, FCFC_MPI_ROOT, MPI_COMM_WORLD, req + nreq++)) ||
-      MPI_Waitall(nreq, req, MPI_STATUSES_IGNORE)) {
+  /* Create a custom structure for broadcasting pair count and bin settings. */
+  dtypes[0] = dtypes[1] = MPI_INT;
+  dtypes[2] = dtypes[3] = MPI_C_BOOL;
+  dtypes[4] = dtypes[5] = dtypes[6] = FCFC_MPI_REAL;
+  int nsend = 5;
+  lengths[0] = lengths[1] = lengths[2] = lengths[3] = c->npc;
+  lengths[4] = c->ns + 1;
+  if (c->treetype == FCFC_STRUCT_BALLTREE) lengths[nsend++] = c->ns + 1;
+  if (c->bintype == FCFC_BIN_SPI) lengths[nsend] = c->np + 1;
+  nsend = 5;
+  if (MPI_Get_address(c->pc_idx[0], addrs) ||
+      MPI_Get_address(c->pc_idx[1], addrs + 1) ||
+      MPI_Get_address(c->comp_pc, addrs + 2) ||
+      MPI_Get_address(c->wt, addrs + 3) ||
+      MPI_Get_address(c->s2bin, addrs + 4) ||
+      (c->treetype == FCFC_STRUCT_BALLTREE &&
+          MPI_Get_address(c->sbin, addrs + nsend++)) ||
+      (c->bintype == FCFC_BIN_SPI &&
+          MPI_Get_address(c->pbin, addrs + nsend++)) ||
+      MPI_Type_create_struct(nsend, lengths, addrs, dtypes, &send_type) ||
+      MPI_Type_commit(&send_type) ||
+      MPI_Bcast(MPI_BOTTOM, 1, send_type, para->root, para->comm) ||
+      MPI_Type_free(&send_type)) {
     P_ERR("failed to broadcast pair count settings and separation bins\n");
     FCFC_QUIT(FCFC_ERR_MPI);
   }
 
   /* Create lookup tables. */
-  if (rank != FCFC_MPI_ROOT) {
+  if (para->rank != para->root) {
     if (c->tabtype == FCFC_LOOKUP_TYPE_INT) {
       if (!(c->stab = create_lut_int(c->s2bin, c->ns, &c->swidth)) ||
           (c->bintype == FCFC_BIN_SPI &&
@@ -975,7 +979,7 @@ void cf_setup_worker(CF **cf, const int rank) {
     }
   }
 
-  if (rank == FCFC_MPI_ROOT) {
+  if (para->rank == para->root) {
     if (c->verbose)
       printf("  Correlation function settings initialized for MPI workers\n");
     printf(FMT_DONE);

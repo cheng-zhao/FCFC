@@ -13,9 +13,6 @@
 #include "kdtree.h"
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef MPI
-#include <mpi.h>
-#endif
 
 /*============================================================================*\
                          Functions for data processing
@@ -515,36 +512,40 @@ Arguments:
   * `root`:     pointer to the root of the k-d tree;
   * `nnode`:    total number of tree nodes;
   * `wt`:       indicate whether to broadcast weights;
-  * `src`:      the source for the broadcast;
-  * `rank`:     ID of MPI task.
+  * `para`:     structure for parallelisms.
 ******************************************************************************/
-void kdtree_broadcast(KDT **root, size_t *nnode, const bool wt, const int src,
-    const int rank) {
+void kdtree_broadcast(KDT **root, size_t *nnode, const bool wt,
+    const PARA *para) {
   if (!root || !nnode ||
-      (src == rank && (!(*root) || !(*nnode) || !((*root)->n)))) {
+      (para->rank == para->root && (!(*root) || !(*nnode) || !((*root)->n)))) {
     P_ERR("the k-d tree is not initialized for broadcasting\n");
-    FCFC_QUIT(FCFC_ERR_ARG);
-  }
-  if (src < 0 || rank < 0) {
-    P_ERR("invalid MPI ranks for broadcasting the k-d tree\n");
     FCFC_QUIT(FCFC_ERR_ARG);
   }
 
   /* Broadcast the number of tree nodes and data points. */
   size_t ndata = 0;
-  if (rank == src) ndata = (*root)->n;
-  MPI_Request req[5 + FCFC_XDIM];
-  if (MPI_Ibcast(nnode, 1, FCFC_MPI_SIZE_T, src, MPI_COMM_WORLD, req) ||
-      MPI_Ibcast(&ndata, 1, FCFC_MPI_SIZE_T, src, MPI_COMM_WORLD, req + 1) ||
-      MPI_Waitall(2, req, MPI_STATUSES_IGNORE)) {
-    P_ERR("failed to broadcast the k-d tree\n");
+  if (para->rank == para->root) ndata = (*root)->n;
+
+  MPI_Datatype dtypes[5 + FCFC_XDIM];
+  int lengths[5 + FCFC_XDIM];
+  MPI_Aint addrs[5 + FCFC_XDIM];
+  MPI_Datatype send_type;
+
+  dtypes[0] = dtypes[1] = FCFC_MPI_SIZE_T;
+  lengths[0] = lengths[1] = 1;
+  if (MPI_Get_address(nnode, addrs) || MPI_Get_address(&ndata, addrs + 1) ||
+      MPI_Type_create_struct(2, lengths, addrs, dtypes, &send_type) ||
+      MPI_Type_commit(&send_type) ||
+      MPI_Bcast(MPI_BOTTOM, 1, send_type, para->root, para->comm) ||
+      MPI_Type_free(&send_type)) {
+    P_ERR("failed to broadcast the size of the k-d tree\n");
     FCFC_QUIT(FCFC_ERR_MPI);
   }
 
   /* Allocate memory for the addresses and numbers of data points. */
-  ptrdiff_t *addr;
+  ptrdiff_t *offset;
   size_t *num;
-  if (!(addr = calloc(*nnode * 3, sizeof(ptrdiff_t))) ||
+  if (!(offset = calloc(*nnode * 3, sizeof(ptrdiff_t))) ||
       !(num = calloc(*nnode, sizeof(size_t)))) {
     P_ERR("failed to allocate memory for broadcasting the k-d tree\n");
     FCFC_QUIT(FCFC_ERR_MEMORY);
@@ -553,7 +554,7 @@ void kdtree_broadcast(KDT **root, size_t *nnode, const bool wt, const int src,
   real *cen, *wid, *x[FCFC_XDIM], *w;
   cen = wid = w = NULL;
   for (int k = 0; k < FCFC_XDIM; k++) x[k] = NULL;
-  if (rank == src) {
+  if (para->rank == para->root) {
     cen = (*root)->cen;
     wid = (*root)->wid;
     for (int k = 0; k < FCFC_XDIM; k++) x[k] = (*root)->x[k];
@@ -561,17 +562,17 @@ void kdtree_broadcast(KDT **root, size_t *nnode, const bool wt, const int src,
 
     /* Gather the number of data points and compute memory offsets. */
 #ifdef OMP
-  #pragma omp parallel for default(none) shared(nnode,root,num,addr)
+  #pragma omp parallel for default(none) shared(nnode,root,num,offset)
 #endif
     for (size_t i = 0; i < *nnode; i++) {
       num[i] = (*root)[i].n;
       size_t j = i * 3;
-      addr[j++] = (*root)[i].x[0] - (*root)[0].x[0];
-      addr[j++] = ((*root)[i].left) ? (*root)[i].left - (*root) : 0;
-      addr[j] = ((*root)[i].right) ? (*root)[i].right - (*root) : 0;
+      offset[j++] = (*root)[i].x[0] - (*root)[0].x[0];
+      offset[j++] = ((*root)[i].left) ? (*root)[i].left - (*root) : 0;
+      offset[j] = ((*root)[i].right) ? (*root)[i].right - (*root) : 0;
     }
   }
-  else {        /* rank != src */
+  else {        /* rank != root */
     /* Allocate memory. */
     if (!(*root = malloc(*nnode * sizeof(KDT))) ||
         !(cen = malloc(*nnode * 3 * sizeof(real))) ||
@@ -589,27 +590,37 @@ void kdtree_broadcast(KDT **root, size_t *nnode, const bool wt, const int src,
   }
 
   /* Broadcast information of the tree. */
-  if (MPI_Ibcast(cen, *nnode * 3, FCFC_MPI_REAL, src, MPI_COMM_WORLD, req) ||
-      MPI_Ibcast(wid, *nnode * 3, FCFC_MPI_REAL, src, MPI_COMM_WORLD,
-          req + 1) ||
-      MPI_Ibcast(num, *nnode, FCFC_MPI_SIZE_T, src, MPI_COMM_WORLD, req + 2) ||
-      MPI_Ibcast(addr, *nnode * 3, MPI_AINT, src, MPI_COMM_WORLD, req + 3) ||
-      MPI_Ibcast(x[0], ndata, FCFC_MPI_REAL, src, MPI_COMM_WORLD, req + 4) ||
-      MPI_Ibcast(x[1], ndata, FCFC_MPI_REAL, src, MPI_COMM_WORLD, req + 5) ||
-      MPI_Ibcast(x[2], ndata, FCFC_MPI_REAL, src, MPI_COMM_WORLD, req + 6) ||
+  dtypes[0] = FCFC_MPI_SIZE_T;
+  dtypes[1] = MPI_AINT;
+  dtypes[2] = dtypes[3] = FCFC_MPI_REAL;
+  lengths[0] = *nnode;
+  lengths[1] = lengths[2] = lengths[3] = *nnode * 3;
+  for (int i = 4; i < 5 + FCFC_XDIM; i++) {
+    dtypes[i] = FCFC_MPI_REAL;
+    lengths[i] = ndata;
+  }
+  const int nsend = (wt) ? 5 + FCFC_XDIM : 4 + FCFC_XDIM;
+  if (MPI_Get_address(num, addrs) ||
+      MPI_Get_address(offset, addrs + 1) ||
+      MPI_Get_address(cen, addrs + 2) ||
+      MPI_Get_address(wid, addrs + 3) ||
+      MPI_Get_address(x[0], addrs + 4) ||
+      MPI_Get_address(x[1], addrs + 5) ||
+      MPI_Get_address(x[2], addrs + 6) ||
 #if FCFC_XDIM == 4
-      MPI_Ibcast(x[3], ndata, FCFC_MPI_REAL, src, MPI_COMM_WORLD, req + 7) ||
+      MPI_Get_address(x[3], addrs + 7) ||
 #endif
-      (wt && (MPI_Ibcast(w, ndata, FCFC_MPI_REAL, src, MPI_COMM_WORLD,
-          req + 4 + FCFC_XDIM)
-          || MPI_Waitall(5 + FCFC_XDIM, req, MPI_STATUSES_IGNORE))) ||
-      (!wt && MPI_Waitall(4 + FCFC_XDIM, req, MPI_STATUSES_IGNORE))) {
+      (wt && MPI_Get_address(w, addrs + 4 + FCFC_XDIM)) ||
+      MPI_Type_create_struct(nsend, lengths, addrs, dtypes, &send_type) ||
+      MPI_Type_commit(&send_type) ||
+      MPI_Bcast(MPI_BOTTOM, 1, send_type, para->root, para->comm) ||
+      MPI_Type_free(&send_type)) {
     P_ERR("failed to broadcast the k-d tree\n");
     FCFC_QUIT(FCFC_ERR_MPI);
   }
 
   /* Restore the tree structure. */
-  if (rank != src) {
+  if (para->rank != para->root) {
 #ifdef OMP
   #pragma omp parallel for
 #endif
@@ -618,19 +629,19 @@ void kdtree_broadcast(KDT **root, size_t *nnode, const bool wt, const int src,
       (*root)[i].cen = cen + j;
       (*root)[i].wid = wid + j;
       (*root)[i].n = num[i];
-      for (int k = 0; k < FCFC_XDIM; k++) (*root)[i].x[k] = x[k] + addr[j];
-      (*root)[i].w = (wt) ? w + addr[j] : NULL;
-      (*root)[i].left = (addr[j + 1]) ? (*root) + addr[j + 1] : NULL;
-      (*root)[i].right = (addr[j + 2]) ? (*root) + addr[j + 2] : NULL;
+      for (int k = 0; k < FCFC_XDIM; k++) (*root)[i].x[k] = x[k] + offset[j];
+      (*root)[i].w = (wt) ? w + offset[j] : NULL;
+      (*root)[i].left = (offset[j + 1]) ? (*root) + offset[j + 1] : NULL;
+      (*root)[i].right = (offset[j + 2]) ? (*root) + offset[j + 2] : NULL;
     }
   }
 
-  free(addr);
+  free(offset);
   free(num);
 }
 #endif
 
-#if defined(MPI) || defined(OMP)
+#ifdef WITH_PARA
 /******************************************************************************
 Function `kdtree_get_nodes`:
   Get all tree nodes at the level with at least the specific number of nodes.

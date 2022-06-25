@@ -47,15 +47,14 @@ Arguments:
   * `cnt`:      array for storing pair counts;
   * `isauto`:   true for counting auto pairs;
   * `withwt`:   true for enabling weights;
-  * `ntask`:    number of MPI tasks;
-  * `rank`:     ID of MPI task.
+  * `para`:     structure for parallelisms.
 Return:
   Zero on success; non-zero on error.
 ******************************************************************************/
 int count_pairs(const void *tree1, const void *tree2, CF *cf, COUNT *cnt,
     const bool isauto, const bool withwt
 #ifdef MPI
-    , const int ntask, const int rank
+    , const PARA *para
 #endif
     );
 

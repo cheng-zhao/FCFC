@@ -1,5 +1,5 @@
 /*******************************************************************************
-* create_tab.h: this file is part of the FCFC program.
+* create_lut.c: this file is part of the FCFC program.
 
 * FCFC: Fast Correlation Function Calculator.
 

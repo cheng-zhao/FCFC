@@ -19,9 +19,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <math.h>
-#ifdef MPI
-#include <mpi.h>
-#endif
 #ifdef OMP
 #include <omp.h>
 #endif
@@ -4843,15 +4840,14 @@ Arguments:
   * `cnt`:      array for storing pair counts;
   * `isauto`:   true for counting auto pairs;
   * `withwt`:   true for enabling weights;
-  * `ntask`:    number of MPI tasks;
-  * `rank`:     ID of MPI task.
+  * `para`:     structure for parallelisms.
 Return:
   Zero on success; non-zero on error.
 ******************************************************************************/
 int count_pairs(const void *tree1, const void *tree2, CF *cf, COUNT *cnt,
     const bool isauto, const bool withwt
 #ifdef MPI
-    , const int ntask, const int rank
+    , const PARA *para
 #endif
     ) {
   void (*paircnt_func) (STACK_DUAL_NODE *, const void *, void *) = NULL;
@@ -7153,7 +7149,7 @@ int count_pairs(const void *tree1, const void *tree2, CF *cf, COUNT *cnt,
   /* Prepare for dynamic MPI scheduler. */
   uint32_t *addr = NULL;
   MPI_Aint win_size = 0;
-  if (rank == FCFC_MPI_ROOT) {
+  if (para->rank == para->root) {
     win_size = sizeof(uint32_t);
     if (MPI_Alloc_mem(win_size, MPI_INFO_NULL, &addr)) {
       P_ERR("failed to allocate memory for MPI window\n");
@@ -7163,14 +7159,14 @@ int count_pairs(const void *tree1, const void *tree2, CF *cf, COUNT *cnt,
   }
   MPI_Win win;
   if (MPI_Win_create(addr, win_size, sizeof(uint32_t), MPI_INFO_NULL,
-      MPI_COMM_WORLD, &win)) {
+      para->comm, &win)) {
     P_ERR("failed to create the MPI window\n");
     free(conf); FCFC_QUIT(FCFC_ERR_MPI);
   }
   uint32_t start, step = cf->nthread * FCFC_STACK_SIZE_PER_THREAD;
 
   /* Compute the tree level for dual-node distribution. */
-  size_t nnodes = ntask * FCFC_STACK_SIZE_PER_TASK;
+  size_t nnodes = para->ntask * FCFC_STACK_SIZE_PER_TASK;
   #ifdef OMP    /* both MPI and OMP */
   nnodes *= cf->nthread * FCFC_STACK_SIZE_PER_THREAD;
   #endif
@@ -7186,9 +7182,9 @@ int count_pairs(const void *tree1, const void *tree2, CF *cf, COUNT *cnt,
 
       /* Distribute dual nodes to tasks dynamically. */
       do {
-        if (MPI_Win_lock(MPI_LOCK_EXCLUSIVE, FCFC_MPI_ROOT, 0, win) ||
-            MPI_Fetch_and_op(&step, &start, MPI_UINT32_T, FCFC_MPI_ROOT, 0,
-            MPI_SUM, win) || MPI_Win_unlock(FCFC_MPI_ROOT, win)) {
+        if (MPI_Win_lock(MPI_LOCK_EXCLUSIVE, para->root, 0, win) ||
+            MPI_Fetch_and_op(&step, &start, MPI_UINT32_T, para->root, 0,
+            MPI_SUM, win) || MPI_Win_unlock(para->root, win)) {
           P_ERR("failed to fetch dual nodes with MPI tasks\n");
           free(conf); free(nodes);
           FCFC_QUIT(FCFC_ERR_MPI);
@@ -7249,9 +7245,9 @@ int count_pairs(const void *tree1, const void *tree2, CF *cf, COUNT *cnt,
 
       /* Distribute dual nodes to tasks dynamically. */
       do {
-        if (MPI_Win_lock(MPI_LOCK_EXCLUSIVE, FCFC_MPI_ROOT, 0, win) ||
-            MPI_Fetch_and_op(&step, &start, MPI_UINT32_T, FCFC_MPI_ROOT, 0,
-            MPI_SUM, win) || MPI_Win_unlock(FCFC_MPI_ROOT, win)) {
+        if (MPI_Win_lock(MPI_LOCK_EXCLUSIVE, para->root, 0, win) ||
+            MPI_Fetch_and_op(&step, &start, MPI_UINT32_T, para->root, 0,
+            MPI_SUM, win) || MPI_Win_unlock(para->root, win)) {
           P_ERR("failed to fetch dual nodes with MPI tasks\n");
           free(conf); free(nodes1); free(nodes2);
           FCFC_QUIT(FCFC_ERR_MPI);
@@ -7309,9 +7305,9 @@ int count_pairs(const void *tree1, const void *tree2, CF *cf, COUNT *cnt,
 
       /* Distribute dual nodes to tasks dynamically. */
       do {
-        if (MPI_Win_lock(MPI_LOCK_EXCLUSIVE, FCFC_MPI_ROOT, 0, win) ||
-            MPI_Fetch_and_op(&step, &start, MPI_UINT32_T, FCFC_MPI_ROOT, 0,
-            MPI_SUM, win) || MPI_Win_unlock(FCFC_MPI_ROOT, win)) {
+        if (MPI_Win_lock(MPI_LOCK_EXCLUSIVE, para->root, 0, win) ||
+            MPI_Fetch_and_op(&step, &start, MPI_UINT32_T, para->root, 0,
+            MPI_SUM, win) || MPI_Win_unlock(para->root, win)) {
           P_ERR("failed to fetch dual nodes with MPI tasks\n");
           free(conf); free(nodes);
           FCFC_QUIT(FCFC_ERR_MPI);
@@ -7372,9 +7368,9 @@ int count_pairs(const void *tree1, const void *tree2, CF *cf, COUNT *cnt,
 
       /* Distribute dual nodes to tasks dynamically. */
       do {
-        if (MPI_Win_lock(MPI_LOCK_EXCLUSIVE, FCFC_MPI_ROOT, 0, win) ||
-            MPI_Fetch_and_op(&step, &start, MPI_UINT32_T, FCFC_MPI_ROOT, 0,
-            MPI_SUM, win) || MPI_Win_unlock(FCFC_MPI_ROOT, win)) {
+        if (MPI_Win_lock(MPI_LOCK_EXCLUSIVE, para->root, 0, win) ||
+            MPI_Fetch_and_op(&step, &start, MPI_UINT32_T, para->root, 0,
+            MPI_SUM, win) || MPI_Win_unlock(para->root, win)) {
           P_ERR("failed to fetch dual nodes with MPI tasks\n");
           free(conf); free(nodes1); free(nodes2);
           FCFC_QUIT(FCFC_ERR_MPI);
@@ -7425,7 +7421,7 @@ int count_pairs(const void *tree1, const void *tree2, CF *cf, COUNT *cnt,
 
   /* Cleanup MPI scheduler. */
   if (MPI_Win_free(&win) ||
-      (rank == FCFC_MPI_ROOT && MPI_Free_mem(addr))) {
+      (para->rank == para->root && MPI_Free_mem(addr))) {
     P_ERR("failed to release memory for MPI scheduler\n");
     free(conf); stack_destroy(&stack);
     FCFC_QUIT(FCFC_ERR_MPI);
@@ -7669,16 +7665,16 @@ int count_pairs(const void *tree1, const void *tree2, CF *cf, COUNT *cnt,
       for (size_t i = 0; i < cf->ntot; i++) pcnt[i] = cnt[i].d;
     }
 
-    if (rank == FCFC_MPI_ROOT) {
+    if (para->rank == para->root) {
       if (MPI_Ireduce(MPI_IN_PLACE, pcnt, cf->ntot, MPI_DOUBLE, MPI_SUM,
-          FCFC_MPI_ROOT, MPI_COMM_WORLD, &req)) {
+          para->root, para->comm, &req)) {
         P_ERR("failed to gather pair counts from MPI tasks\n");
         FCFC_QUIT(FCFC_ERR_MPI);
       }
     }
     else {
       if (MPI_Ireduce(pcnt, NULL, cf->ntot, MPI_DOUBLE, MPI_SUM,
-                      FCFC_MPI_ROOT, MPI_COMM_WORLD, &req)) {
+                      para->root, para->comm, &req)) {
         P_ERR("failed to gather pair counts from MPI tasks\n");
         FCFC_QUIT(FCFC_ERR_MPI);
       }
@@ -7701,16 +7697,16 @@ int count_pairs(const void *tree1, const void *tree2, CF *cf, COUNT *cnt,
       for (size_t i = 0; i < cf->ntot; i++) pcnt[i] = cnt[i].i;
     }
 
-    if (rank == FCFC_MPI_ROOT) {
+    if (para->rank == para->root) {
       if (MPI_Ireduce(MPI_IN_PLACE, pcnt, cf->ntot, MPI_INT64_T, MPI_SUM,
-          FCFC_MPI_ROOT, MPI_COMM_WORLD, &req)) {
+          para->root, para->comm, &req)) {
         P_ERR("failed to gather pair counts from MPI tasks\n");
         FCFC_QUIT(FCFC_ERR_MPI);
       }
     }
     else {
       if (MPI_Ireduce(pcnt, NULL, cf->ntot, MPI_INT64_T, MPI_SUM,
-          FCFC_MPI_ROOT, MPI_COMM_WORLD, &req)) {
+          para->root, para->comm, &req)) {
         P_ERR("failed to gather pair counts from MPI tasks\n");
         FCFC_QUIT(FCFC_ERR_MPI);
       }

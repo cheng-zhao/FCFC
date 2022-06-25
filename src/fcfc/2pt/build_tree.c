@@ -18,9 +18,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef MPI
-#include <mpi.h>
-#endif
 
 /*============================================================================*\
                  Function for pre-processing the input catalog
@@ -147,13 +144,13 @@ Arguments:
   * `conf`:     structure for storing configurations;
   * `cf`:       structure for correlation function evaluations;
   * `idx`:      index of the catalogue to be processed;
-  * `rank`:     ID of MPI task.
+  * `para`:     structure for parallelisms.
 Return:
   Address of the tree on success; NULL on error.
 ******************************************************************************/
 void *tree_create(const CONF *conf, CF *cf, const int idx
 #ifdef MPI
-    , const int rank
+    , const PARA *para
 #endif
     ) {
   void *tree = NULL;
@@ -165,7 +162,7 @@ void *tree_create(const CONF *conf, CF *cf, const int idx
   DATA *data = cf->data + idx;
 
 #ifdef MPI
-  if (rank == FCFC_MPI_ROOT) {
+  if (para->rank == para->root) {
 #endif
     if (!conf) {
       P_ERR("configuration parameters are not loaded\n");
@@ -317,9 +314,8 @@ void *tree_create(const CONF *conf, CF *cf, const int idx
   /* Broadcast the data catalog and tree. */
   switch (cf->treetype) {
     case FCFC_STRUCT_KDTREE:
-      kdtree_broadcast((KDT **) (&tree), &nnode, cf->wt[idx], FCFC_MPI_ROOT,
-          rank);
-      if (rank != FCFC_MPI_ROOT) {
+      kdtree_broadcast((KDT **) (&tree), &nnode, cf->wt[idx], para);
+      if (para->rank != para->root) {
         KDT *root = (KDT *) tree;
         cf->data[idx].n = root->n;
         cf->data[idx].x[0] = root->x[0];
@@ -330,9 +326,8 @@ void *tree_create(const CONF *conf, CF *cf, const int idx
       }
       break;
     case FCFC_STRUCT_BALLTREE:
-      balltree_broadcast((BLT **) (&tree), &nnode, cf->wt[idx], FCFC_MPI_ROOT,
-          rank);
-      if (rank != FCFC_MPI_ROOT) {
+      balltree_broadcast((BLT **) (&tree), &nnode, cf->wt[idx], para);
+      if (para->rank != para->root) {
         BLT *root = (BLT *) tree;
         cf->data[idx].n = root->n;
         cf->data[idx].x[0] = root->x[0];
@@ -347,7 +342,7 @@ void *tree_create(const CONF *conf, CF *cf, const int idx
       return NULL;
   }
 
-  if (rank == FCFC_MPI_ROOT) {
+  if (para->rank == para->root) {
 #endif
     printf(FMT_DONE);
 #ifdef MPI
