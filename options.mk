@@ -26,14 +26,14 @@ WITH_MU_ONE :=
 # Set `WITH_CFITSIO := T` to enable FITS file format.
 # The paths for cfitsio header (fitsio.h) and library (libcfitsio.{a,so,dylib})
 # files can be set via `CFITSIO_INC_DIR` and `CFITSIO_LIB_DIR`, respectively.
-WITH_CFITSIO := T
+WITH_CFITSIO := 
 CFITSIO_INC_DIR := 
 CFITSIO_LIB_DIR := 
 
 # Set `WITH_HDF5 := T` to enable HDF5 file format.
 # The paths for libhdf5 header (hdf5.h) and library (libhdf5.{a,so,dylib})
 # files can be set via `HDF5_INC_DIR` and `HDF5_LIB_DIR`, respectively.
-WITH_HDF5 := T
+WITH_HDF5 := 
 HDF5_INC_DIR := 
 HDF5_LIB_DIR := 
 

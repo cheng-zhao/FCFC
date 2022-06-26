@@ -251,8 +251,8 @@ typedef enum {
 /*============================================================================*\
                            Definitions of version codes
 \*============================================================================*/
-#define FCFC_VERNUM             1
-#define FCFC_VERSION            "1.0.0"
+#define FCFC_VERNUM             2
+#define FCFC_VERSION            "1.0.1"
 
 #endif
 
