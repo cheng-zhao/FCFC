@@ -31,6 +31,7 @@
 #ifndef __LOAD_CONF_H__
 #define __LOAD_CONF_H__
 
+#include "define_para.h"
 #include <stdbool.h>
 
 /*============================================================================*\
@@ -104,17 +105,13 @@ Function `load_conf`:
 Arguments:
   * `argc`:     number of arguments passed via command line;
   * `argv`:     array of command line arguments;
-  * `ntask`:    number of MPI tasks;
-  * `nthread`:  number of OpenMP threads.
+  * `para`:     structure for parallelisms.
 Return:
   The structure for storing configurations.
 ******************************************************************************/
 CONF *load_conf(const int argc, char *const *argv
-#ifdef MPI
-    , const int ntask
-#endif
-#ifdef OMP
-    , const int nthread
+#ifdef WITH_PARA
+    , const PARA *para
 #endif
     );
 

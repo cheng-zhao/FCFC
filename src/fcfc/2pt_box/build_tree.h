@@ -41,13 +41,13 @@ Arguments:
   * `conf`:     structure for storing configurations;
   * `cf`:       structure for correlation function evaluations;
   * `idx`:      index of the catalogue to be processed;
-  * `rank`:     ID of MPI task.
+  * `para`:     structure for parallelisms.
 Return:
   Address of the tree on success; NULL on error.
 ******************************************************************************/
 void *tree_create(const CONF *conf, CF *cf, const int idx
 #ifdef MPI
-    , const int rank
+    , const PARA *para
 #endif
     );
 

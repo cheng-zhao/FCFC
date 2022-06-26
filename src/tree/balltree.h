@@ -32,6 +32,7 @@
 #define __BALLTREE_H__
 
 #include "define.h"
+#include "define_para.h"
 #include <stddef.h>
 #include <stdbool.h>
 
@@ -80,14 +81,13 @@ Arguments:
   * `root`:     pointer to the root of the ball tree;
   * `nnode`:    total number of tree nodes;
   * `wt`:       indicate whether to broadcast weights;
-  * `src`:      the source for the broadcast;
-  * `rank`:     ID of MPI task.
+  * `para`:     structure for parallelisms.
 ******************************************************************************/
-void balltree_broadcast(BLT **root, size_t *nnode, const bool wt, const int src,
-    const int rank);
+void balltree_broadcast(BLT **root, size_t *nnode, const bool wt,
+    const PARA *para);
 #endif
 
-#if defined(MPI) || defined(OMP)
+#ifdef WITH_PARA
 /******************************************************************************
 Function `balltree_get_nodes`:
   Get all tree nodes at the level with at least the specific number of nodes.

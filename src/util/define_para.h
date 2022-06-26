@@ -1,5 +1,5 @@
 /*******************************************************************************
-* 2pt/count_func.h: this file is part of the FCFC program.
+* define_para.h: this file is part of the FCFC program.
 
 * FCFC: Fast Correlation Function Calculator.
 
@@ -7,17 +7,17 @@
         https://github.com/cheng-zhao/FCFC
 
 * Copyright (c) 2020 -- 2022 Cheng Zhao <zhaocheng03@gmail.com>
-
+ 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
-
+ 
  The above copyright notice and this permission notice shall be included in all
  copies or substantial portions of the Software.
-
+ 
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,34 +28,51 @@
 
 *******************************************************************************/
 
-#ifndef __COUNT_FUNC_H__
-#define __COUNT_FUNC_H__
+#ifndef __DEFINE_PARA_H__
+#define __DEFINE_PARA_H__
 
-#include "eval_cf.h"
+#if defined(OMP) || defined(MPI)
+
+#ifndef WITH_PARA
+  #define WITH_PARA
+#endif
+
+#ifdef MPI
+#include <mpi.h>
+#endif
 
 /*============================================================================*\
-                          Interface for pair counting
+               Definition of the data structure for parallelisms
+\*============================================================================*/
+
+typedef struct {
+#ifdef MPI
+  int ntask;
+  int root;
+  int rank;
+  MPI_Comm comm;
+#endif
+#ifdef OMP
+  int nthread;
+#endif
+} PARA;
+
+/*============================================================================*\
+                      Function for setting up parallelisms
 \*============================================================================*/
 
 /******************************************************************************
-Function `kdtree_count_cross_pairs`:
-  Count pairs based on the k-D tree data structure.
-Arguments:
-  * `tree1`:    pointer to the root of the first k-D tree;
-  * `tree2`:    pointer to the root of the second k-D tree;
-  * `cf`:       structure for congifurations of correlation functions;
-  * `cnt`:      array for storing pair counts;
-  * `isauto`:   true for counting auto pairs;
-  * `withwt`:   true for enabling weights;
-  * `para`:     structure for parallelisms.
-Return:
-  Zero on success; non-zero on error.
+Function `para_init`:
+  Initialise the structure for parallelisms.
 ******************************************************************************/
-int count_pairs(const void *tree1, const void *tree2, CF *cf, COUNT *cnt,
-    const bool isauto, const bool withwt
-#ifdef MPI
-    , const PARA *para
+void para_init(PARA *para);
+
+#else
+
+#ifdef WITH_PARA
+  #undef WITH_PARA
 #endif
-    );
+
+#endif
 
 #endif
