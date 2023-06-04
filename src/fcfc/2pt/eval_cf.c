@@ -125,7 +125,12 @@ static int eval_pairs(const CONF *conf, CF *cf
         /* Double auto pairs. */
         if (cf->wt[i]) {
           for (size_t k = 0; k < cf->ntot; k++) cf->cnt[i][k].d *= 2;
-          cf->norm[i] = cf->data[cat[0]].wt * (cf->data[cat[0]].wt - 1);
+          //cf->norm[i] = cf->data[cat[0]].wt * (cf->data[cat[0]].wt - 1);
+          double wt2sum = 0;
+          for (size_t kk = 0; kk < cf->data[cat[0]].n; kk++){
+            wt2sum += cf->data[cat[0]].w[kk] * cf->data[cat[0]].w[kk];
+          }
+          cf->norm[i] = cf->data[cat[0]].wt * cf->data[cat[0]].wt - wt2sum;
         }
         else {
           for (size_t k = 0; k < cf->ntot; k++) cf->cnt[i][k].i *= 2;
