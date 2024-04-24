@@ -369,7 +369,7 @@ static int eval_cf_wp(const CONF *conf, CF *cf) {
 
   for (int i = 0; i < cf->ncf; i++) {
     for (int j = 0; j < cf->np; j++) {
-      double dpi = cf->pbin[j + 1] - cf->pbin[j];
+      double dpi = cf->pbin_raw[j + 1] - cf->pbin_raw[j];
       for (int k = 0; k < cf->ns; k++) {
         cf->wp[i][k] += 2 * cf->cf[i][k + j * cf->ns] * dpi;
       }
