@@ -89,11 +89,11 @@
 #endif
 
 /* Define the MPI data type for size_t */
-#if     SIZE_MAX == UINT_MAX
+#if     defined(UNIT_MAX) && SIZE_MAX == UINT_MAX
   #define FCFC_MPI_SIZE_T MPI_UNSIGNED
-#elif   SIZE_MAX == ULONG_MAX
+#elif   defined(ULONG_MAX) && SIZE_MAX == ULONG_MAX
   #define FCFC_MPI_SIZE_T MPI_UNSIGNED_LONG
-#elif   SIZE_MAX == ULLONG_MAX
+#elif   defined(ULLONG_MAX) && SIZE_MAX == ULLONG_MAX
   #define FCFC_MPI_SIZE_T MPI_UNSIGNED_LONG_LONG
 #else
   #error unsupported size of type `size_t`

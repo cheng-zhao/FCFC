@@ -735,7 +735,7 @@ static int cfg_parse_array(cfg_param_valid_t *par) {
     }
   }
   par->value = start + 1;       /* omit the starting '[' */
-  *end = '\0';                  /* remove the ending ']' */
+  if (end) *end = '\0';         /* remove the ending ']' */
   par->narr = n + 1;
   return 0;
 }

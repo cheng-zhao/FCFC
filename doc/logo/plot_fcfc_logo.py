@@ -159,7 +159,7 @@ class fcfc_logo:
     import matplotlib.patches as mpatches
 
     # Create the figure.
-    fig = plt.figure(figsize=(float(self.width)/dpi,float(self.height)/dpi), \
+    plt.figure(figsize=(float(self.width)/dpi,float(self.height)/dpi), \
           dpi=dpi, frameon=False)
     ax = plt.axes([0,0,1,1])
     ax.set_axis_off()

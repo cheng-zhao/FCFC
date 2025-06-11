@@ -1,4 +1,3 @@
-
 # Fast Correlation Function Calculator (FCFC)
 
 ![GitHub](https://img.shields.io/github/license/cheng-zhao/FCFC.svg)
