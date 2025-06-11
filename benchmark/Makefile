@@ -14,6 +14,7 @@ TARGETS = BENCHMARK_struct_serial BENCHMARK_struct_avx BENCHMARK_struct_single_s
 #TARGETS += BENCHMARK_struct_omp_dynamic BENCHMARK_struct_omp_static
 
 
+.PHONY: all
 all: $(TARGETS)
 
 BENCHMARK_struct_serial: struct
@@ -67,5 +68,6 @@ BENCHMARK_struct_omp_static: struct
 	$(CC) $(CFLAGS) -DBENCHMARK_TIMING -DBENCHMARK_OMP_STATIC -fopenmp -o $@ $(SRCS) $(wildcard $</*.c) $(LIBS) $(INCL) -I$<
 
 
+.PHONY: clean
 clean:
-	rm $(TARGETS)
+	rm -f $(TARGETS)

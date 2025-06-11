@@ -73,4 +73,4 @@ FCFC_2PT_BOX: src/fcfc/2pt_box
 	$(C_CMPLR) $(CFLAGS) -o $@ $(SRCS) $(wildcard $</*.c) $(LIBS) $(INCL) -I$<
 
 clean:
-	rm $(TARGETS)
+	rm -f $(TARGETS)
