@@ -49,7 +49,7 @@
   typedef float real;
   #define REAL_TOL      1e-6    /* tolerance for float number comparison */
   #ifdef FLT_EPSILON
-    #define REAL_EPS    REAL_EPS
+    #define REAL_EPS    FLT_EPSILON
   #else
     #define REAL_EPS    1e-7
   #endif

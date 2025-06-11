@@ -683,7 +683,8 @@ Arguments:
 static void gather_nodes(const BLT *tree, const int current,
     const int level, const BLT **nodes, size_t *inode) {
   if (!tree) return;
-  if (current == level) nodes[(*inode)++] = tree;
+  if (current == level || (tree->left == NULL && tree->right == NULL))
+    nodes[(*inode)++] = tree;
   else {
     gather_nodes(tree->left, current + 1, level, nodes, inode);
     gather_nodes(tree->right, current + 1, level, nodes, inode);

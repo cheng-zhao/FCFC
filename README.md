@@ -1,3 +1,4 @@
+
 # Fast Correlation Function Calculator (FCFC)
 
 ![GitHub](https://img.shields.io/github/license/cheng-zhao/FCFC.svg)
@@ -32,7 +33,7 @@ This program is compliant with the ISO C99 and IEEE POSIX.1-2008 standards, and 
 
 FCFC is written by Cheng Zhao (&#36213;&#25104;), and is distributed under the [MIT license](LICENSE.txt). If you use this program in research work that results in publications, please cite the following paper:
 
-> Zhao et al. 2020, [arXiv:2007.08997](https://ui.adsabs.harvard.edu/abs/2020arXiv200708997Z/abstract)
+> Zhao, C., 2023, [&ldquo;Fast correlation function calculator: A high-performance pair-counting toolkit&rdquo;](https://doi.org/10.1051/0004-6361/202346015), *Astronomy and Astrophysics*, 672, A83. \[[arXiv:2301.12557](https://arxiv.org/abs/2301.12557)\] \[[ADS Abstract](https://ui.adsabs.harvard.edu/abs/2023A%26A...672A..83Z)\]
 
 <sub>[\[TOC\]](#table-of-contents)</sub>
 
@@ -81,12 +82,12 @@ The list of available command line options can be consulted using the `-h` or `-
 
 An introduction of the components and the corresponding configuration parameters are listed below:
 
-| Component    | Description                                                     | Configuration parameters               |
-|:------------:|-----------------------------------------------------------------|:--------------------------------------:|
-| FCFC_2PT     | Compute 2PCF for survey-like data                               | [FCFC_2PT.md](doc/FCFC_2PT.md)         |
-| FCFC_2PT_BOX | Compute 2PCF for periodic simulation boxes<sup>[*](#tab1)</sup> | [FCFC_2PT_BOX.md](doc/FCFC_2PT_BOX.md) |
+| Component      | Description                                                      | Configuration parameters                 |
+|:--------------:|------------------------------------------------------------------|:----------------------------------------:|
+| FCFC\_2PT      | Compute 2PCF for survey-like data                                | [FCFC\_2PT.md](doc/FCFC_2PT.md)          |
+| FCFC\_2PT\_BOX | Compute 2PCF for periodic simulation boxes<sup>[\*](#tab1)</sup> | [FCFC\_2PT\_BOX.md](doc/FCFC_2PT_BOX.md) |
 
-<span id="tab1">*: treat the 3<sup>rd</sup> dimension (*z*-direction) as the line of sight</span>
+<span id="tab1">\*: treat the 3<sup>rd</sup> dimension (*z*-direction) as the line of sight</span>
 
 <sub>[\[TOC\]](#table-of-contents)</sub>
 
@@ -98,4 +99,3 @@ This program benefits from the following open-source projects:
 -   [https://github.com/swenson/sort](https://github.com/swenson/sort)
 
 <sub>[\[TOC\]](#table-of-contents)</sub>
-

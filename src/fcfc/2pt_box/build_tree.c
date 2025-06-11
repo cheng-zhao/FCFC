@@ -131,12 +131,17 @@ void *tree_create(const CONF *conf, CF *cf, const int idx
     }
     /* Process weights. */
     if (conf->has_wt[idx]) {
-      double sumw = 0;
+      double sumw, sumw2;
+      sumw = sumw2 = 0;
   #ifdef OMP
-    #pragma omp parallel for reduction(+:sumw) default(none) shared(data)
+    #pragma omp parallel for reduction(+:sumw,sumw2) default(none) shared(data)
   #endif
-      for (size_t i = 0; i < data->n; i++) sumw += data->w[i];
+      for (size_t i = 0; i < data->n; i++) {
+        sumw += data->w[i];
+        sumw2 += data->w[i] * data->w[i];
+      }
       data->wt = sumw;
+      data->w2 = sumw2;
     }
     else if (cf->cat_wt[idx]) {
   #if FCFC_SIMD  ==  FCFC_SIMD_NONE
@@ -152,7 +157,7 @@ void *tree_create(const CONF *conf, CF *cf, const int idx
     #pragma omp parallel for default(none) shared(data)
   #endif
       for (size_t i = 0; i < data->n; i++) data->w[i] = 1;
-      data->wt = (double) data->n;
+      data->wt = data->w2 = (double) data->n;
     }
 
     /* Construct the tree. */

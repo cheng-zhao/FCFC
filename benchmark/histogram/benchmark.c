@@ -226,7 +226,16 @@ int main(int argc, char *argv[]) {
     printf(FMT_KEY(METHOD) ": FastLog2 (order %d)\n\n",
         method - BENCHMARK_HIST_FASTLOG2_START);
   }
-  else printf(FMT_KEY(METHOD) ": %s\n\n",
+  else printf(FMT_KEY(METHOD)
+#if BENCHMARK_SIMD  ==  BENCHMARK_SIMD_NONE
+      ": %s (no SIMD)\n\n",
+#elif BENCHMARK_SIMD  ==  BENCHMARK_SIMD_AVX
+      ": %s (AVX)\n\n",
+#elif BENCHMARK_SIMD  ==  BENCHMARK_SIMD_AVX2
+      ": %s (AVX2)\n\n",
+#elif BENCHMARK_SIMD  ==  BENCHMARK_SIMD_AVX512
+      ": %s (AVX512)\n\n",
+#endif
       method >= 0 ? benchmark_method_name[method] : "hybrid lookup table");
 
   /* Evaluate the distance histogram. */

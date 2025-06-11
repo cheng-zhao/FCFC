@@ -16,7 +16,6 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdbool.h>
-#include <limits.h>
 
 /*============================================================================*\
                           Interfaces for writing files

@@ -45,10 +45,11 @@
 
 /* Structure for the input catalog. */
 typedef struct {
-  size_t n;             /* number of objects          */
-  real *x[FCFC_XDIM];   /* coordinates                */
-  real *w;              /* weights                    */
-  double wt;            /* weighted number of objects */
+  size_t n;             /* number of objects      */
+  real *x[FCFC_XDIM];   /* coordinates            */
+  real *w;              /* weights                */
+  double wt;            /* sum of weights         */
+  double w2;            /* sum of squared weights */
 } DATA;
 
 typedef struct {

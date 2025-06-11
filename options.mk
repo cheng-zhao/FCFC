@@ -3,7 +3,11 @@
 # * MPICC is used when WITH_MPI == T.
 CC := gcc
 MPICC := mpicc
-CFLAGS = -O3 -march=native -flto
+CFLAGS = -O3 -march=native
+
+# LTO option. Recommended flags for different compilers:
+#   gcc: -flto=auto, intel: -ipo, clang: -flto
+CFLAGS += -flto=auto
 
 # Set `WITH_MPI := T` to enable MPI.
 WITH_MPI := 

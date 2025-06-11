@@ -12,7 +12,6 @@
 
 #include "eval_cf.h"
 #include "count_func.h"
-#include "read_file.h"
 #include "read_res.h"
 #include "save_res.h"
 #include "legpoly.h"
@@ -125,7 +124,8 @@ static int eval_pairs(const CONF *conf, CF *cf
         /* Double auto pairs. */
         if (cf->wt[i]) {
           for (size_t k = 0; k < cf->ntot; k++) cf->cnt[i][k].d *= 2;
-          cf->norm[i] = cf->data[cat[0]].wt * (cf->data[cat[0]].wt - 1);
+          cf->norm[i] = cf->data[cat[0]].wt * cf->data[cat[0]].wt
+              - cf->data[cat[0]].w2;
         }
         else {
           for (size_t k = 0; k < cf->ntot; k++) cf->cnt[i][k].i *= 2;
@@ -369,7 +369,7 @@ static int eval_cf_wp(const CONF *conf, CF *cf) {
 
   for (int i = 0; i < cf->ncf; i++) {
     for (int j = 0; j < cf->np; j++) {
-      double dpi = cf->pbin[j + 1] - cf->pbin[j];
+      double dpi = cf->pbin_raw[j + 1] - cf->pbin_raw[j];
       for (int k = 0; k < cf->ns; k++) {
         cf->wp[i][k] += 2 * cf->cf[i][k + j * cf->ns] * dpi;
       }
