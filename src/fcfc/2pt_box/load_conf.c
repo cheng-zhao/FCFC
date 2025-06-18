@@ -6,7 +6,7 @@
 * Github repository:
         https://github.com/cheng-zhao/FCFC
 
-* Copyright (c) 2020 -- 2022 Cheng Zhao <zhaocheng03@gmail.com>  [MIT license]
+* Copyright (c) 2020 -- 2025 Cheng Zhao <zhaocheng03@gmail.com>  [MIT license]
 
 *******************************************************************************/
 
@@ -237,7 +237,7 @@ static void version(void *args) {
       "disabled (enable with -DWITH_HDF5)\n"
 #endif
       "\n\
-- Copyright (c) 2020 -- 2022 Cheng ZHAO.\n\
+- Copyright (c) 2020 -- 2025 Cheng ZHAO.\n\
 - Github repository: https://github.com/cheng-zhao/FCFC\n\
 - Licence: MIT\n");
   exit(0);

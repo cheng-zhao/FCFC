@@ -6,7 +6,7 @@
 * Github repository:
         https://github.com/cheng-zhao/FCFC
 
-* Copyright (c) 2020 -- 2022 Cheng Zhao <zhaocheng03@gmail.com>  [MIT license]
+* Copyright (c) 2020 -- 2025 Cheng Zhao <zhaocheng03@gmail.com>  [MIT license]
 
 *******************************************************************************/
 

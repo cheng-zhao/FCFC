@@ -6,7 +6,7 @@
 * Github repository:
         https://github.com/cheng-zhao/FCFC
 
-* Copyright (c) 2020 -- 2022 Cheng Zhao <zhaocheng03@gmail.com>
+* Copyright (c) 2020 -- 2025 Cheng Zhao <zhaocheng03@gmail.com>
  
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -251,8 +251,8 @@ typedef enum {
 /*============================================================================*\
                            Definitions of version codes
 \*============================================================================*/
-#define FCFC_VERNUM             2
-#define FCFC_VERSION            "1.0.1"
+#define FCFC_VERNUM             3
+#define FCFC_VERSION            "1.1.1"
 
 #endif
 
